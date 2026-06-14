@@ -25,6 +25,8 @@ class ClipboardItem {
       ClipboardItemType.text => text,
       ClipboardItemType.image => image,
       ClipboardItemType.file => files.join('\n'),
+      ClipboardItemType.json => text,
+      ClipboardItemType.url => text,
     };
   }
 

@@ -1,6 +1,5 @@
 import 'package:cliper/domain/entities/clipboard_item.dart';
 import 'package:cliper/domain/enums/clipboard_item_type.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/fake_services.dart';
@@ -42,8 +41,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Hello world'), findsOneWidget);
-    expect(find.byType(Image), findsOneWidget);
     expect(find.textContaining('/tmp/a.txt'), findsOneWidget);
+    expect(find.text('Image'), findsOneWidget);
     expect(find.textContaining('/tmp/b.txt'), findsOneWidget);
   });
 }

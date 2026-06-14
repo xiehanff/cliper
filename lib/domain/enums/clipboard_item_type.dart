@@ -1,7 +1,9 @@
 enum ClipboardItemType {
   text,
   image,
-  file;
+  file,
+  json,
+  url;
 
   String get value => name;
 

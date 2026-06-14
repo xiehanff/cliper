@@ -8,6 +8,7 @@ import 'package:super_clipboard/super_clipboard.dart';
 
 import '../../../application/controllers/app_controller.dart';
 import '../../../core/utils/app_logger.dart';
+import '../../../core/utils/content_type_detector.dart';
 import '../../../core/utils/id_generator.dart';
 import '../../../domain/entities/clipboard_item.dart';
 import '../../../domain/enums/clipboard_item_type.dart';
@@ -79,7 +80,8 @@ class ClipboardMonitorManager with ClipboardListener {
 
     final text = await _readText(reader);
     if (text != null && text.isNotEmpty) {
-      return _createItem(ClipboardItemType.text, text: text);
+      final subType = ContentTypeDetector.detect(text);
+      return _createItem(subType, text: text);
     }
 
     final image = await _readImage(reader);

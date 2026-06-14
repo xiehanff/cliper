@@ -37,6 +37,7 @@ flutter:
   assets:
     - assets/icon.png
     - assets/tray_icon.ico
+    - assets/icons/
 
   fonts:
     - family: PingFang SC

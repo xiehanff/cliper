@@ -23,6 +23,8 @@ class ClipboardWriterImpl implements ClipboardWriter {
 
     switch (item.type) {
       case ClipboardItemType.text:
+      case ClipboardItemType.json:
+      case ClipboardItemType.url:
         await _writeText(clipboard, item.text);
       case ClipboardItemType.image:
         await _writeImage(clipboard, item.image);

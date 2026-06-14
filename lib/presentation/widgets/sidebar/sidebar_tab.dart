@@ -39,9 +39,39 @@ class SidebarTab extends StatefulWidget {
 class _SidebarTabState extends State<SidebarTab> {
   bool _hover = false;
   bool _pickerOpen = false;
+  bool _editing = false;
+  late TextEditingController _editController;
+
+  @override
+  void initState() {
+    super.initState();
+    _editController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _editController.dispose();
+    super.dispose();
+  }
 
   void _openPicker() => setState(() => _pickerOpen = true);
   void _closePicker() => setState(() => _pickerOpen = false);
+
+  void _startEditing() {
+    if (widget.isRealtime) return;
+    _editController.text = widget.group?.name ?? '';
+    setState(() => _editing = true);
+  }
+
+  void _finishEditing() {
+    if (!_editing) return;
+    _editing = false;
+    final newName = _editController.text.trim();
+    if (newName.isNotEmpty && widget.group != null) {
+      Provider.of<AppController>(context, listen: false)
+          .renameGroup(widget.group!.id, newName);
+    }
+  }
 
   void _changeColor(String color) {
     final group = widget.group;
@@ -66,18 +96,14 @@ class _SidebarTabState extends State<SidebarTab> {
       child: GestureDetector(
         onTap: widget.onTap,
         behavior: HitTestBehavior.opaque,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOutCubic,
-            decoration: BoxDecoration(
-              color: widget.selected
-                  ? theme.purpleAccentDark
-                  : (_hover ? theme.purpleAccentLight : Colors.transparent),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Container(
+          decoration: BoxDecoration(
+            color: widget.selected
+                ? theme.purpleAccentDark
+                : (_hover ? theme.purpleAccentLight : Colors.transparent),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(
               children: [
                 if (!widget.isRealtime)
@@ -95,17 +121,69 @@ class _SidebarTabState extends State<SidebarTab> {
                   ),
                 if (!widget.isRealtime) const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    name,
-                    style: TextStyle(
-                      color: widget.selected ? Colors.white : theme.primaryText,
-                      fontSize: 13,
-                      fontWeight:
-                          widget.selected ? FontWeight.w600 : FontWeight.w500,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  child: _editing && !widget.isRealtime
+                      ? SizedBox(
+                          height: 24,
+                          child: TextField(
+                            controller: _editController,
+                            autofocus: true,
+                            style: TextStyle(
+                              color: theme.primaryText,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              height: 1.0,
+                            ),
+                            decoration: const InputDecoration(
+                              isDense: true,
+                              contentPadding: EdgeInsets.zero,
+                              border: InputBorder.none,
+                            ),
+                            onSubmitted: (_) => _finishEditing(),
+                            onTapOutside: (_) => _finishEditing(),
+                          ),
+                        )
+                      : Text(
+                          name,
+                          style: TextStyle(
+                            color: widget.selected
+                                ? Colors.white
+                                : theme.primaryText,
+                            fontSize: 13,
+                            fontWeight: widget.selected
+                                ? FontWeight.w600
+                                : FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                 ),
+                if (!widget.isRealtime)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 2),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: Center(
+                        child: AnimatedOpacity(
+                          opacity: _hover ? 1 : 0,
+                          duration: const Duration(milliseconds: 120),
+                          child: IgnorePointer(
+                            ignoring: !_hover,
+                            child: GestureDetector(
+                              onTap: _startEditing,
+                              behavior: HitTestBehavior.opaque,
+                              child: Icon(
+                                Icons.edit_outlined,
+                                size: 12,
+                                color: widget.selected
+                                    ? Colors.white.withValues(alpha: 0.7)
+                                    : theme.secondaryText,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 if (!widget.isRealtime)
                   SizedBox(
                     width: 24,
@@ -137,12 +215,11 @@ class _SidebarTabState extends State<SidebarTab> {
                       ),
                     ),
                   ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+              ],                      
+            ),                        
+          ),                          
+        ),                            
+      );                              
 
     if (_pickerOpen && !widget.isRealtime) {
       tab = Column(

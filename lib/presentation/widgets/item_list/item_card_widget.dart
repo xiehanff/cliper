@@ -96,9 +96,9 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
           margin: const EdgeInsets.only(bottom: 8),
           padding: EdgeInsets.fromLTRB(
             14,
-            widget.item.type == ClipboardItemType.image ? 20 : 12,
+            widget.item.type == ClipboardItemType.image ? 14 : 12,
             14,
-            widget.item.type == ClipboardItemType.image ? 20 : 12,
+            widget.item.type == ClipboardItemType.image ? 14 : 12,
           ),
           decoration: BoxDecoration(
             color: _hover ? theme.cardHover : theme.cardBackground,
@@ -116,7 +116,7 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               _TypeIcon(type: widget.item.type),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,6 +199,8 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
       ClipboardItemType.text => 'Text',
       ClipboardItemType.image => 'Image',
       ClipboardItemType.file => 'File',
+      ClipboardItemType.json => 'JSON',
+      ClipboardItemType.url => 'URL',
     };
   }
 
@@ -207,6 +209,8 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
       ClipboardItemType.text => item.text,
       ClipboardItemType.image => _imageSubtitle ?? '',
       ClipboardItemType.file => item.files.join('\n'),
+      ClipboardItemType.json => item.text,
+      ClipboardItemType.url => item.text,
     };
   }
 
@@ -247,24 +251,29 @@ class _TypeIcon extends StatelessWidget {
 
   const _TypeIcon({required this.type});
 
+  String _assetPath(ClipboardItemType t) {
+    return switch (t) {
+      ClipboardItemType.text => 'assets/icons/text_cate.png',
+      ClipboardItemType.image => 'assets/icons/image_cate.png',
+      ClipboardItemType.file => 'assets/icons/file_cate.png',
+      ClipboardItemType.json => 'assets/icons/json_cate.png',
+      ClipboardItemType.url => 'assets/icons/url_cate.png',
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = AppTheme.of(context);
-    return Container(
-      width: 28,
-      height: 28,
-      decoration: BoxDecoration(
-        color: theme.cardHover,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Icon(
-        switch (type) {
-          ClipboardItemType.text => Icons.text_snippet_outlined,
-          ClipboardItemType.image => Icons.image_outlined,
-          ClipboardItemType.file => Icons.folder_outlined,
-        },
-        size: 16,
-        color: theme.secondaryText,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(9),
+      child: SizedBox(
+        width: 52,
+        height: 52,
+        child: Image.asset(
+          _assetPath(type),
+          width: 52,
+          height: 52,
+          fit: BoxFit.contain,
+        ),
       ),
     );
   }
@@ -302,8 +311,8 @@ class _ImageThumbnailState extends State<_ImageThumbnail> {
     return ClipRRect(
       borderRadius: BorderRadius.circular(4),
       child: SizedBox(
-        width: 72,
-        height: 72,
+        width: 96,
+        height: 96,
         child: imageProvider == null
             ? Container(color: Colors.grey[300])
             : Image(

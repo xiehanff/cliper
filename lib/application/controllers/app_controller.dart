@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 
 import '../../core/constants/app_constants.dart';
@@ -27,7 +25,7 @@ class AppController extends ChangeNotifier {
 
   ClipboardStore _store = const ClipboardStore();
   String? _currentGroupId;
-  Timer? _persistTimer;
+  bool _persistPending = false;
 
   AppController({
     required StoreRepository storeRepository,
@@ -258,16 +256,14 @@ class AppController extends ChangeNotifier {
   }
 
   void _persist() {
-    _persistTimer?.cancel();
-    _persistTimer = Timer(
-      const Duration(milliseconds: 300),
-      () => unawaited(_saveStore()),
-    );
+    if (_persistPending) return;
+    _persistPending = true;
+    _saveStore().then((_) => _persistPending = false);
   }
 
   @override
   void dispose() {
-    _persistTimer?.cancel();
+    _persistPending = false;
     super.dispose();
   }
 
