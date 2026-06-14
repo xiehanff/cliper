@@ -4,6 +4,11 @@
 
 ### Added
 
+- Makefile + make.cmd + make.ps1 统一构建入口
+- ContentTypeDetector 工具类：根据数据格式检测内容类型（text/image/file）
+- Windows 安装程序构建脚本（Inno Setup + PowerShell）
+- Windows 快捷方式创建脚本（cmd + ps1）
+- Windows 构建与分发文档
 - 本地字体配置：苹方（PingFang SC）作为全局中文字体，Google Sans Mono 作为剪切板记录等宽字体
 - 字体资产注册（`assets/fonts/`）
 - CHANGELOG.md
