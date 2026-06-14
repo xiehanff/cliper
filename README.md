@@ -1,29 +1,35 @@
 # CLIPER
 
-Flutter 重构版桌面剪贴板管理应用。
+![CLIPER](cliper.png)
 
-## 开发环境
+Clipboard history manager for Windows and macOS. Never lose anything you copied — search, organize, and reuse with ease.
 
-- Flutter / Dart 必须通过 FVM 使用固定版本
-- Flutter 命令统一使用 `fvm flutter xxx`
-- Dart 命令统一使用 `fvm dart xxx`
+## What is CLIPER?
 
-## 常用命令
+CLIPER lives in your system tray and pops up a floating panel when you need it. Everything you copy — text, links, images, files — is automatically recorded and instantly searchable.
 
-```powershell
-fvm flutter pub get
-fvm flutter analyze
-fvm flutter test
-fvm flutter run -d windows
-fvm flutter build windows --release
-```
+## How to use
 
-## Windows 构建
+1. **Install** — run the installer; CLIPER starts automatically.
+2. **Copy anything** — text, images, URLs, files. CLIPER saves them all.
+3. **Open the panel** — press the global shortcut (default: `Alt+Shift+V`).
+4. **Find and paste** — scroll through history or type to search. Double-click any item to copy it back.
+5. **Organize** — create groups and drag items into collections to keep related content together.
+6. **Hide** — the panel hides automatically when you click away.
 
-- Release 构建：`fvm flutter build windows --release`
-- 安装包构建：`.\make.cmd package-windows`
+## Features
 
-相关文档：
+- **Unified history** — text, links, images, and files in one chronological timeline.
+- **Instant search** — filter across all content types as you type.
+- **Custom groups** — create, rename, reorder, and color-code groups. Drag items between groups.
+- **Global shortcut** — customizable hotkey to show/hide the panel.
+- **Dark & light themes** — switch anytime.
+- **Multi-language** — English and Chinese (中文).
+- **Lightweight** — runs in the system tray. No window chrome, no taskbar entry.
+- **Privacy-first** — all data stays local. No accounts, no cloud, no telemetry.
 
-- [Windows 构建与快捷方式记录](/D:/xiehan/flutter/cliper/docs/windows-build-shortcut-runbook.md)
-- [Windows 安装包生成与分发](/D:/xiehan/flutter/cliper/docs/windows-installer-distribution.md)
+---
+
+[**中文版**](#)
+
+*CLIPER. Copy. Find. Paste.*

@@ -44,6 +44,10 @@ flutter:
       fonts:
         - asset: assets/fonts/PingFangSC-Regular.ttf
           weight: 400
+    - family: GBaiMarkerPen
+      fonts:
+        - asset: assets/fonts/GBaiMarkerPen.ttf
+          weight: 400
     - family: GoogleSansMono
       fonts:
         - asset: assets/fonts/GoogleSansMono-Regular.ttf

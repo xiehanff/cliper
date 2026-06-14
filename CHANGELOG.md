@@ -4,6 +4,17 @@
 
 ### Added
 
+- 集成 851 GBai 马克笔体（GBaiMarkerPen）作为标题品牌字体
+- README 宣传图（cliper.png）
+- README 重写为面向用户的英文版 + 中文入口
+
+### Changed
+
+- 标题从动态文本（实时剪贴板/分组名）固定为 "Cliper"，移除侧边栏联动
+- 标题使用绿色渐变（#77C599 → #5DA37A）+ GBaiMarkerPen 字体渲染
+
+### Added
+
 - Makefile + make.cmd + make.ps1 统一构建入口
 - ContentTypeDetector 工具类：根据数据格式检测内容类型（text/image/file）
 - Windows 安装程序构建脚本（Inno Setup + PowerShell）

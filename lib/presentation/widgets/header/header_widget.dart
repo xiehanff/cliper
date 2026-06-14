@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../application/controllers/app_controller.dart';
 import '../../../core/l10n/app_localizations.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import 'shortcut_formatter.dart';
 
@@ -100,14 +101,22 @@ class _HeaderWidgetState extends State<HeaderWidget> {
         child: Row(
           children: [
             Expanded(
-              child: Text(
-                widget.title,
-                style: TextStyle(
-                  color: theme.primaryText,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+              child: ShaderMask(
+                shaderCallback: (bounds) => const LinearGradient(
+                  colors: [AppColors.accent, AppColors.accentDark],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ).createShader(bounds),
+                child: Text(
+                  widget.title,
+                  style: const TextStyle(
+                    fontFamily: 'GBaiMarkerPen',
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-                overflow: TextOverflow.ellipsis,
               ),
             ),
             KeyboardListener(

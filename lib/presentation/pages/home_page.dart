@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../application/controllers/app_controller.dart';
-import '../../core/l10n/app_localizations.dart';
-import '../../domain/entities/clipboard_group.dart';
 import '../widgets/header/header_widget.dart';
 import '../widgets/item_list/item_list_widget.dart';
 import '../widgets/settings_panel/settings_panel_widget.dart';
@@ -27,16 +25,6 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final controller = Provider.of<AppController>(context);
-    final l10n = AppLocalizations.forLanguage(controller.currentLanguage);
-
-    final title = controller.isRealtimeSelected
-        ? l10n.realtime
-        : controller.groups
-            .firstWhere(
-              (g) => g.id == controller.currentGroupId,
-              orElse: () => const ClipboardGroup(id: '', name: ''),
-            )
-            .name;
 
     return Scaffold(
       body: DecoratedBox(
@@ -54,7 +42,7 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   children: [
                     HeaderWidget(
-                      title: title,
+                      title: 'Cliper',
                       onDragStart: widget.onHeaderDragStart,
                       settingsOpen: _settingsOpen,
                       onSettingsToggle: _toggleSettings,
