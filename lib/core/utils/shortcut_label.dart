@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/services.dart';
 
 String formatShortcut(
@@ -55,12 +53,12 @@ bool isOnlyModifier(LogicalKeyboardKey key) {
       key == LogicalKeyboardKey.shiftRight;
 }
 
-String platformAwareShortcutLabel(String shortcut) {
-  if (Platform.isMacOS) {
+String platformAwareShortcutLabel(String shortcut, bool isMacOS) {
+  if (isMacOS) {
     return shortcut
-        .replaceAll('CommandOrControl', '⌘')
-        .replaceAll('Alt', '⌥')
-        .replaceAll('Shift', '⇧');
+        .replaceAll('CommandOrControl', '\u2318')
+        .replaceAll('Alt', '\u2325')
+        .replaceAll('Shift', '\u21E7');
   }
   return shortcut
       .replaceAll('CommandOrControl', 'Ctrl')

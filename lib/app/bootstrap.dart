@@ -5,14 +5,17 @@ import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../application/controllers/app_controller.dart';
+import '../application/controllers/settings_handler.dart';
 import '../application/services/clipboard_history_service_impl.dart';
 import '../application/services/group_service_impl.dart';
 import '../core/utils/app_logger.dart';
 import '../core/utils/id_generator.dart';
 import '../infrastructure/desktop/clipboard/clipboard_monitor_manager.dart';
 import '../infrastructure/desktop/clipboard/clipboard_writer_impl.dart';
+import '../infrastructure/desktop/clipboard/image_loader.dart';
 import '../infrastructure/desktop/hotkey/hotkey_manager_service.dart';
 import '../infrastructure/desktop/launch/launch_at_startup_service_impl.dart';
+import '../infrastructure/desktop/platform/single_instance_lock.dart';
 import '../infrastructure/desktop/tray/tray_manager_service.dart';
 import '../infrastructure/desktop/viewport/macos_viewport_service.dart';
 import '../infrastructure/desktop/viewport/windows_viewport_service.dart';
@@ -50,6 +53,18 @@ void runCliperApp() async {
     logger: logger,
   );
   final launchService = LaunchAtStartupServiceImpl(logger: logger);
+  final imageLoader = ImageLoaderServiceImpl(logger: logger);
+  final settingsHandler = SettingsHandler(
+    hotkeyService: hotkeyService,
+    launchService: launchService,
+    logger: logger,
+  );
+  final singleInstanceLock = SingleInstanceLock(logger: logger);
+
+  final acquired = await singleInstanceLock.acquire();
+  if (!acquired) {
+    return;
+  }
 
   await windowController.initialize();
 
@@ -57,10 +72,10 @@ void runCliperApp() async {
     storeRepository: storeRepository,
     historyService: historyService,
     groupService: groupService,
+    settingsHandler: settingsHandler,
     clipboardWriter: clipboardWriter,
     windowController: windowController,
-    hotkeyService: hotkeyService,
-    launchService: launchService,
+    imageLoader: imageLoader,
     logger: logger,
   );
 
@@ -74,6 +89,7 @@ void runCliperApp() async {
   final trayService = TrayManagerService(
     windowController: windowController,
     onQuit: () async {
+      await singleInstanceLock.release();
       await windowManager.destroy();
       exit(0);
     },

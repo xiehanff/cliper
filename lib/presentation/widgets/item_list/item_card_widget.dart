@@ -1,8 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
-import 'dart:typed_data';
-import 'dart:ui' show instantiateImageCodec;
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -49,35 +44,17 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
   }
 
   Future<void> _computeImageSubtitle() async {
-    try {
-      Uint8List? bytes;
-      String format = '';
+    final imageLoader =
+        Provider.of<AppController>(context, listen: false).imageLoader;
+    if (imageLoader == null) return;
 
-      if (widget.item.image.startsWith('data:')) {
-        final mimeEnd = widget.item.image.indexOf(';');
-        final mime = widget.item.image.substring(0, mimeEnd);
-        format = mime.contains('png') ? 'PNG' : 'JPEG';
-        final comma = widget.item.image.indexOf(',');
-        if (comma < 0) return;
-        bytes = base64Decode(widget.item.image.substring(comma + 1));
-      } else if (widget.item.image.isNotEmpty) {
-        final ext = widget.item.image.split('.').last.toUpperCase();
-        format = ext == 'PNG' ? 'PNG' : 'JPEG';
-        final file = File(widget.item.image);
-        if (await file.exists()) {
-          bytes = await file.readAsBytes();
-        }
-      }
+    final info = await imageLoader.resolveImageInfo(widget.item.image);
+    if (info == null) return;
 
-      if (bytes == null) return;
-      final codec = await instantiateImageCodec(bytes);
-      final frame = await codec.getNextFrame();
-      final w = frame.image.width;
-      final h = frame.image.height;
-      if (mounted) {
-        setState(() => _imageSubtitle = '$format $w×$h');
-      }
-    } catch (_) {}
+    if (mounted) {
+      setState(
+          () => _imageSubtitle = '${info.format} ${info.width}×${info.height}');
+    }
   }
 
   @override
@@ -186,7 +163,7 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
         color: Colors.transparent,
         child: Opacity(
           opacity: 0.86,
-          child: SizedBox(width: 280, child: _buildDragPreview(theme)),
+          child: SizedBox(width: 280, child: _DragPreview(item: widget.item)),
         ),
       ),
       childWhenDragging: Opacity(opacity: 0.35, child: card),
@@ -214,23 +191,6 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
     };
   }
 
-  Widget _buildDragPreview(AppThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: theme.cardBackground,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: theme.borderColor),
-      ),
-      child: Text(
-        _subtitleForItem(widget.item),
-        maxLines: 3,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(color: theme.primaryText, fontSize: 12),
-      ),
-    );
-  }
-
   void _activateItem() {
     Provider.of<AppController>(
       context,
@@ -243,6 +203,41 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
       context,
       listen: false,
     ).deleteItem(widget.item.id, groupId: widget.groupId);
+  }
+}
+
+class _DragPreview extends StatelessWidget {
+  final ClipboardItem item;
+
+  const _DragPreview({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: theme.cardBackground,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: theme.borderColor),
+      ),
+      child: Text(
+        _subtitle(item),
+        maxLines: 3,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(color: theme.primaryText, fontSize: 12),
+      ),
+    );
+  }
+
+  String _subtitle(ClipboardItem clipboardItem) {
+    return switch (clipboardItem.type) {
+      ClipboardItemType.text => clipboardItem.text,
+      ClipboardItemType.image => 'Image',
+      ClipboardItemType.file => clipboardItem.files.join('\n'),
+      ClipboardItemType.json => clipboardItem.text,
+      ClipboardItemType.url => clipboardItem.text,
+    };
   }
 }
 
@@ -326,21 +321,9 @@ class _ImageThumbnailState extends State<_ImageThumbnail> {
   }
 
   ImageProvider? _buildImageProvider(String image) {
-    if (image.startsWith('data:')) {
-      final bytes = _decodeDataUrl(image);
-      if (bytes != null) return MemoryImage(bytes);
-    }
-    if (image.isNotEmpty) return FileImage(File(image));
-    return null;
-  }
-
-  Uint8List? _decodeDataUrl(String dataUrl) {
-    final commaIndex = dataUrl.indexOf(',');
-    if (commaIndex < 0) return null;
-    try {
-      return base64Decode(dataUrl.substring(commaIndex + 1));
-    } catch (_) {
-      return null;
-    }
+    final imageLoader =
+        Provider.of<AppController>(context, listen: false).imageLoader;
+    if (imageLoader == null) return null;
+    return imageLoader.buildImageProvider(image);
   }
 }

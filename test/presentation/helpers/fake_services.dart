@@ -1,4 +1,5 @@
 import 'package:cliper/application/controllers/app_controller.dart';
+import 'package:cliper/application/controllers/settings_handler.dart';
 import 'package:cliper/application/services/clipboard_history_service_impl.dart';
 import 'package:cliper/application/services/group_service_impl.dart';
 import 'package:cliper/core/utils/app_logger.dart';
@@ -112,6 +113,7 @@ class FakeLaunchService implements LaunchAtStartupService {
 
 AppController createTestController() {
   final idGenerator = FakeIdGenerator();
+  final fakeLogger = FakeAppLogger();
   return AppController(
     storeRepository: InMemoryStoreRepository(),
     historyService: ClipboardHistoryServiceImpl(
@@ -122,10 +124,13 @@ AppController createTestController() {
       idGenerator: idGenerator,
       clock: () => 1700000000000,
     ),
+    settingsHandler: SettingsHandler(
+      hotkeyService: FakeHotkeyService(),
+      launchService: FakeLaunchService(),
+      logger: fakeLogger,
+    ),
     clipboardWriter: FakeClipboardWriter(),
     windowController: FakeWindowController(),
-    hotkeyService: FakeHotkeyService(),
-    launchService: FakeLaunchService(),
-    logger: FakeAppLogger(),
+    logger: fakeLogger,
   );
 }

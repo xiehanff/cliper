@@ -69,7 +69,7 @@ class GroupServiceImpl implements GroupService {
   }) {
     // realtime -> group: copy without removing from realtime
     if (sourceGroupId == null && targetGroupId != null) {
-      final sourceItem = _findItem(store, sourceGroupId, itemId);
+      final sourceItem = store.findItem(itemId, groupId: sourceGroupId);
       if (sourceItem == null) return store;
       final copy = sourceItem.copyWith(
         id: _idGenerator.generate(),
@@ -90,23 +90,6 @@ class GroupServiceImpl implements GroupService {
       );
     }
     return _insertItem(storeAfterRemoval, targetGroupId, migrated);
-  }
-
-  ClipboardItem? _findItem(
-    ClipboardStore store,
-    String? groupId,
-    String itemId,
-  ) {
-    if (groupId == null) {
-      final index = store.realtime.indexWhere((it) => it.id == itemId);
-      return index < 0 ? null : store.realtime[index];
-    }
-    for (final group in store.groups) {
-      if (group.id != groupId) continue;
-      final index = group.items.indexWhere((it) => it.id == itemId);
-      return index < 0 ? null : group.items[index];
-    }
-    return null;
   }
 
   ClipboardStore _updateGroup(

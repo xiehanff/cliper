@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cliper/application/services/clipboard_history_service_impl.dart';
 import 'package:cliper/core/constants/app_constants.dart';
 import 'package:cliper/domain/entities/clipboard_item.dart';
@@ -96,6 +98,23 @@ void main() {
 
       expect(store.realtime.length, 1);
     });
+
+    test(
+      'file duplicate is not inserted ignoring Windows path case',
+      () {
+        var store = service.addItem(
+          const ClipboardStore(),
+          fileItem(['C:\\Foo\\Bar.txt']),
+        );
+        store = service.addItem(
+          store,
+          fileItem(['c:\\foo\\bar.txt']),
+        );
+
+        expect(store.realtime.length, 1);
+      },
+      skip: !Platform.isWindows,
+    );
 
     test('different types with same string are not duplicates', () {
       var store = service.addItem(const ClipboardStore(), textItem('abc'));

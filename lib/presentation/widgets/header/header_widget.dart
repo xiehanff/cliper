@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../../application/controllers/app_controller.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
-import 'shortcut_formatter.dart';
+import '../../../core/utils/shortcut_label.dart';
 
 class HeaderWidget extends StatefulWidget {
   final String title;
@@ -27,7 +27,6 @@ class HeaderWidget extends StatefulWidget {
 }
 
 class _HeaderWidgetState extends State<HeaderWidget> {
-  bool _recording = false;
   final FocusNode _keyboardFocus = FocusNode();
 
   @override
@@ -37,49 +36,23 @@ class _HeaderWidgetState extends State<HeaderWidget> {
   }
 
   void _toggleRecording() {
-    setState(() => _recording = !_recording);
-    if (_recording) {
+    final controller = Provider.of<AppController>(context, listen: false);
+    if (controller.isShortcutRecording) {
+      controller.cancelShortcutRecording();
+      _keyboardFocus.unfocus();
+    } else {
+      controller.startShortcutRecording();
       _keyboardFocus.requestFocus();
-      return;
     }
-    _keyboardFocus.unfocus();
-  }
-
-  void _cancelRecording() {
-    if (!_recording) return;
-    setState(() => _recording = false);
-    _keyboardFocus.unfocus();
   }
 
   void _handleKeyEvent(KeyEvent event) {
-    if (!_recording || event is! KeyDownEvent) return;
-
-    final key = event.logicalKey;
-    if (key == LogicalKeyboardKey.escape) {
-      _cancelRecording();
-      return;
+    final controller = Provider.of<AppController>(context, listen: false);
+    final wasRecording = controller.isShortcutRecording;
+    controller.handleShortcutRecordingKeyEvent(event);
+    if (wasRecording && !controller.isShortcutRecording) {
+      _keyboardFocus.unfocus();
     }
-
-    if (isOnlyModifier(key)) return;
-
-    final pressed = HardwareKeyboard.instance.logicalKeysPressed;
-    final hasModifier = pressed.any(
-      (k) =>
-          k == LogicalKeyboardKey.controlLeft ||
-          k == LogicalKeyboardKey.controlRight ||
-          k == LogicalKeyboardKey.metaLeft ||
-          k == LogicalKeyboardKey.metaRight ||
-          k == LogicalKeyboardKey.altLeft ||
-          k == LogicalKeyboardKey.altRight ||
-          k == LogicalKeyboardKey.shiftLeft ||
-          k == LogicalKeyboardKey.shiftRight,
-    );
-    if (!hasModifier) return;
-
-    final shortcut = formatShortcut(pressed, key);
-    Provider.of<AppController>(context, listen: false).setShortcut(shortcut);
-    setState(() => _recording = false);
-    _keyboardFocus.unfocus();
   }
 
   @override
@@ -128,28 +101,30 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                   _ToolIconButton(
                     tooltip: AppLocalizations.of(context).shortcut,
                     onTap: _toggleRecording,
-                    highlighted: _recording,
+                    highlighted: controller.isShortcutRecording,
                     icon: Icon(
                       Icons.keyboard_outlined,
                       size: 18,
-                      color: _recording
+                      color: controller.isShortcutRecording
                           ? Colors.white
                           : theme.secondaryText,
                     ),
                   ),
                   const SizedBox(width: 6),
                   _ShortcutChip(
-                    recording: _recording,
+                    recording: controller.isShortcutRecording,
                     shortcut: controller.currentShortcut,
                   ),
                   const SizedBox(width: 12),
                   _ToolIconButton(
                     tooltip: AppLocalizations.of(context).theme,
                     onTap: () => controller.switchTheme(
-                      controller.currentTheme == 'dark' ? 'light' : 'dark',
+                      controller.currentTheme == AppConstants.defaultTheme
+                          ? AppConstants.supportedThemes[1]
+                          : AppConstants.defaultTheme,
                     ),
                     icon: Icon(
-                      controller.currentTheme == 'dark'
+                      controller.currentTheme == AppConstants.defaultTheme
                           ? Icons.light_mode_outlined
                           : Icons.dark_mode_outlined,
                       size: 18,
@@ -160,7 +135,9 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                   _ToolIconButton(
                     tooltip: AppLocalizations.of(context).language,
                     onTap: () => controller.switchLanguage(
-                      controller.currentLanguage == 'zh' ? 'en' : 'zh',
+                      controller.currentLanguage == AppConstants.supportedLanguages[0]
+                          ? AppConstants.supportedLanguages[1]
+                          : AppConstants.supportedLanguages[0],
                     ),
                     icon: Icon(
                       Icons.language_outlined,
@@ -204,9 +181,10 @@ class _ShortcutChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
     final l10n = AppLocalizations.of(context);
+    final controller = Provider.of<AppController>(context, listen: false);
     final label = recording
         ? l10n.waitingForKey
-        : platformAwareShortcutLabel(shortcut);
+        : platformAwareShortcutLabel(shortcut, controller.isMacOS);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),

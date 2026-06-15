@@ -1,4 +1,5 @@
 import 'package:cliper/application/controllers/app_controller.dart';
+import 'package:cliper/application/controllers/settings_handler.dart';
 import 'package:cliper/application/services/clipboard_history_service_impl.dart';
 import 'package:cliper/application/services/group_service_impl.dart';
 import 'package:cliper/core/constants/app_constants.dart';
@@ -28,6 +29,7 @@ void main() {
           idGenerator: idGenerator,
           clock: () => now,
         ),
+        settingsHandler: SettingsHandler(),
       );
     });
 

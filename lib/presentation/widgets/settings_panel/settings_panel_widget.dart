@@ -59,7 +59,7 @@ class SettingsPanelWidget extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '开机自启动',
+                        l10n.autoLaunch,
                         style: TextStyle(
                           color: theme.primaryText,
                           fontSize: 13,
@@ -67,8 +67,9 @@ class SettingsPanelWidget extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        _statusText(
-                            controller.currentLanguage, controller.autoLaunch),
+                        controller.autoLaunch
+                            ? l10n.autoLaunchOn
+                            : l10n.autoLaunchOff,
                         style: TextStyle(
                           color: theme.secondaryText,
                           fontSize: 12,
@@ -101,21 +102,12 @@ class SettingsPanelWidget extends StatelessWidget {
                     vertical: 6,
                   ),
                 ),
-                child: const Text('关闭'),
+                child: Text(l10n.close),
               ),
             ),
           ],
         ),
       ),
     );
-  }
-
-  String _statusText(String language, bool enabled) {
-    if (language == 'en') {
-      return enabled
-          ? 'App will launch on system startup'
-          : 'App will not launch on system startup';
-    }
-    return enabled ? '应用将在系统启动时自动运行' : '应用不会随系统启动';
   }
 }

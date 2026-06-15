@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../core/utils/clipboard_path_normalizer.dart';
 import '../enums/clipboard_item_type.dart';
 
 @immutable
@@ -24,7 +25,8 @@ class ClipboardItem {
     return switch (type) {
       ClipboardItemType.text => text,
       ClipboardItemType.image => image,
-      ClipboardItemType.file => files.join('\n'),
+      ClipboardItemType.file =>
+          files.map(normalizeClipboardFilePath).join('\n'),
       ClipboardItemType.json => text,
       ClipboardItemType.url => text,
     };

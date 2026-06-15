@@ -38,6 +38,10 @@ class AppLocalizations {
   String get light => _strings['light']!;
   String get editShortcut => _strings['editShortcut']!;
   String get waitingForKey => _strings['waitingForKey']!;
+  String get autoLaunch => _strings['autoLaunch']!;
+  String get autoLaunchOn => _strings['autoLaunchOn']!;
+  String get autoLaunchOff => _strings['autoLaunchOff']!;
+  String get close => _strings['close']!;
 
   static const Map<String, String> _zh = {
     'realtime': '实时剪贴板',
@@ -57,6 +61,10 @@ class AppLocalizations {
     'light': '浅色',
     'editShortcut': '点击修改',
     'waitingForKey': '等待按键',
+    'autoLaunch': '开机自启动',
+    'autoLaunchOn': '应用将在系统启动时自动运行',
+    'autoLaunchOff': '应用不会随系统启动',
+    'close': '关闭',
   };
 
   static const Map<String, String> _en = {
@@ -77,5 +85,9 @@ class AppLocalizations {
     'light': 'Light',
     'editShortcut': 'Click to edit',
     'waitingForKey': 'Waiting for keys',
+    'autoLaunch': 'Launch at startup',
+    'autoLaunchOn': 'App will launch on system startup',
+    'autoLaunchOff': 'App will not launch on system startup',
+    'close': 'Close',
   };
 }

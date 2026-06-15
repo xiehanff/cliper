@@ -28,6 +28,20 @@ class ClipboardStore {
     );
   }
 
+  ClipboardItem? findItem(String itemId, {String? groupId}) {
+    if (groupId == null) {
+      final index = realtime.indexWhere((it) => it.id == itemId);
+      return index < 0 ? null : realtime[index];
+    }
+
+    for (final group in groups) {
+      if (group.id != groupId) continue;
+      final index = group.items.indexWhere((it) => it.id == itemId);
+      return index < 0 ? null : group.items[index];
+    }
+    return null;
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'realtime': realtime.map((e) => e.toJson()).toList(),
@@ -66,6 +80,7 @@ class ClipboardStore {
 
   @override
   String toString() {
-    return 'ClipboardStore(realtime: ${realtime.length}, groups: ${groups.length}, settings: $settings)';
+    return 'ClipboardStore(realtime: ${realtime.length}, '
+        'groups: ${groups.length}, settings: $settings)';
   }
 }

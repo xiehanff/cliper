@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/app_logger.dart';
@@ -9,20 +10,22 @@ import '../../domain/repositories/store_repository.dart';
 import '../../domain/services/clipboard_history_service.dart';
 import '../../domain/services/clipboard_writer.dart';
 import '../../domain/services/group_service.dart';
-import '../../domain/services/hotkey_service.dart';
-import '../../domain/services/launch_at_startup_service.dart';
+import '../../domain/services/image_loader_service.dart';
 import '../../domain/services/viewport_controller.dart';
+import 'settings_handler.dart';
 
 class AppController extends ChangeNotifier {
+  // -- Dependencies --
   final StoreRepository _storeRepository;
   final ClipboardHistoryService _historyService;
   final GroupService _groupService;
   final ClipboardWriter? _clipboardWriter;
   final ViewportController? _windowController;
-  final HotkeyService? _hotkeyService;
-  final LaunchAtStartupService? _launchService;
+  final SettingsHandler _settings;
+  final ImageLoaderService? _imageLoader;
   final AppLogger? _logger;
 
+  // -- State --
   ClipboardStore _store = const ClipboardStore();
   String? _currentGroupId;
   bool _persistPending = false;
@@ -31,34 +34,56 @@ class AppController extends ChangeNotifier {
     required StoreRepository storeRepository,
     required ClipboardHistoryService historyService,
     required GroupService groupService,
+    required SettingsHandler settingsHandler,
     ClipboardWriter? clipboardWriter,
     ViewportController? windowController,
-    HotkeyService? hotkeyService,
-    LaunchAtStartupService? launchService,
+    ImageLoaderService? imageLoader,
     AppLogger? logger,
   })  : _storeRepository = storeRepository,
         _historyService = historyService,
         _groupService = groupService,
+        _settings = settingsHandler,
         _clipboardWriter = clipboardWriter,
         _windowController = windowController,
-        _hotkeyService = hotkeyService,
-        _launchService = launchService,
+        _imageLoader = imageLoader,
         _logger = logger;
 
+  // -- Public accessors --
   ClipboardStore get store => _store;
-
   String? get currentGroupId => _currentGroupId;
-
   bool get isRealtimeSelected => _currentGroupId == null;
 
+  // Settings proxies (delegated to SettingsHandler)
   String get currentTheme => _store.settings.theme;
-
   String get currentLanguage => _store.settings.language;
-
   String get currentShortcut => _store.settings.shortcut;
-
   bool get autoLaunch => _store.settings.autoLaunch;
+  bool get isMacOS => _settings.isMacOS;
+  ImageLoaderService? get imageLoader => _imageLoader;
 
+  // Shortcut recording proxies
+  bool get isShortcutRecording => _settings.shortcutRecording;
+
+  void startShortcutRecording() {
+    _settings.shortcutRecording = true;
+    notifyListeners();
+  }
+
+  void cancelShortcutRecording() {
+    _settings.shortcutRecording = false;
+    notifyListeners();
+  }
+
+  void handleShortcutRecordingKeyEvent(KeyEvent event) {
+    final wasRecording = _settings.shortcutRecording;
+    _settings.handleShortcutRecordingKeyEvent(event, (shortcut) {
+      setShortcut(shortcut);
+    });
+    final recordingChanged = wasRecording != _settings.shortcutRecording;
+    if (recordingChanged) notifyListeners();
+  }
+
+  // Group proxies (delegated to GroupService)
   List<ClipboardGroup> get groups => _store.groups;
 
   List<ClipboardItem> get currentItems {
@@ -75,6 +100,7 @@ class AppController extends ChangeNotifier {
     return group.items;
   }
 
+  // -- Store I/O --
   Future<void> loadStore() async {
     try {
       _store = await _storeRepository.load();
@@ -85,6 +111,7 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
+  // -- Group selection --
   void selectGroup(String? groupId) {
     if (groupId != null) {
       final exists = _store.groups.any((g) => g.id == groupId);
@@ -99,35 +126,44 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
+  // -- Settings operations --
   void switchTheme(String theme) {
     if (!AppConstants.supportedThemes.contains(theme)) return;
-    _store = _store.copyWith(settings: _store.settings.copyWith(theme: theme));
+    _store = _settings.switchTheme(_store, theme);
     notifyListeners();
     _persist();
   }
 
   void switchLanguage(String language) {
     if (!AppConstants.supportedLanguages.contains(language)) return;
-    _store = _store.copyWith(
-      settings: _store.settings.copyWith(language: language),
-    );
+    _store = _settings.switchLanguage(_store, language);
     notifyListeners();
     _persist();
   }
 
   Future<void> setShortcut(String shortcut) async {
-    _store = _store.copyWith(
-      settings: _store.settings.copyWith(shortcut: shortcut),
-    );
+    _store = _settings.setShortcutStore(_store, shortcut);
     notifyListeners();
     _persist();
+    await _settings.applyShortcutHotkey(shortcut);
+  }
 
-    try {
-      await _hotkeyService?.unregister();
-      await _hotkeyService?.register(shortcut);
-    } catch (e, stack) {
-      _logger?.error('Failed to update hotkey', error: e, stackTrace: stack);
-    }
+  Future<void> setAutoLaunch(bool enabled) async {
+    _store = _settings.setAutoLaunchStore(_store, enabled);
+    notifyListeners();
+    _persist();
+    await _settings.applyAutoLaunch(enabled);
+  }
+
+  // -- Group operations --
+  bool isGroupNameTaken(String name, {String? excludingGroupId}) {
+    final normalized = name.trim().toLowerCase();
+    if (normalized.isEmpty) return false;
+
+    return _store.groups.any((group) {
+      if (group.id == excludingGroupId) return false;
+      return group.name.trim().toLowerCase() == normalized;
+    });
   }
 
   void createGroup(String name, String color) {
@@ -140,16 +176,6 @@ class AppController extends ChangeNotifier {
     _store = _groupService.createGroup(_store, normalizedName, color);
     notifyListeners();
     _persist();
-  }
-
-  bool isGroupNameTaken(String name, {String? excludingGroupId}) {
-    final normalized = _normalizeGroupName(name);
-    if (normalized.isEmpty) return false;
-
-    return _store.groups.any((group) {
-      if (group.id == excludingGroupId) return false;
-      return _normalizeGroupName(group.name) == normalized;
-    });
   }
 
   void deleteGroup(String groupId) {
@@ -179,6 +205,7 @@ class AppController extends ChangeNotifier {
     _persist();
   }
 
+  // -- Item operations --
   void addClipboardItem(ClipboardItem item) {
     _store = _historyService.addItem(_store, item);
     notifyListeners();
@@ -186,7 +213,7 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> activateItem(String itemId, {String? groupId}) async {
-    final item = _findItem(itemId, groupId: groupId);
+    final item = _store.findItem(itemId, groupId: groupId);
     if (item == null) {
       _logger?.warning('Activated item not found: $itemId');
       return;
@@ -241,20 +268,7 @@ class AppController extends ChangeNotifier {
     _persist();
   }
 
-  Future<void> setAutoLaunch(bool enabled) async {
-    _store = _store.copyWith(
-      settings: _store.settings.copyWith(autoLaunch: enabled),
-    );
-    notifyListeners();
-    _persist();
-
-    try {
-      await _launchService?.setEnabled(enabled);
-    } catch (e, stack) {
-      _logger?.error('Failed to set auto launch', error: e, stackTrace: stack);
-    }
-  }
-
+  // -- Persistence --
   void _persist() {
     if (_persistPending) return;
     _persistPending = true;
@@ -274,20 +288,4 @@ class AppController extends ChangeNotifier {
       _logger?.error('Failed to save store', error: e, stackTrace: stack);
     }
   }
-
-  ClipboardItem? _findItem(String itemId, {String? groupId}) {
-    if (groupId == null) {
-      final index = _store.realtime.indexWhere((it) => it.id == itemId);
-      return index < 0 ? null : _store.realtime[index];
-    }
-
-    for (final group in _store.groups) {
-      if (group.id != groupId) continue;
-      final index = group.items.indexWhere((it) => it.id == itemId);
-      return index < 0 ? null : group.items[index];
-    }
-    return null;
-  }
-
-  String _normalizeGroupName(String name) => name.trim().toLowerCase();
 }
