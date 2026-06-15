@@ -9,7 +9,7 @@ import 'package:cliper/domain/repositories/store_repository.dart';
 import 'package:cliper/domain/services/clipboard_writer.dart';
 import 'package:cliper/domain/services/hotkey_service.dart';
 import 'package:cliper/domain/services/launch_at_startup_service.dart';
-import 'package:cliper/domain/services/window_controller.dart';
+import 'package:cliper/domain/services/viewport_controller.dart';
 
 class FakeIdGenerator implements IdGenerator {
   int _counter = 0;
@@ -56,7 +56,7 @@ class FakeClipboardWriter implements ClipboardWriter {
   }
 }
 
-class FakeWindowController implements WindowController {
+class FakeWindowController implements ViewportController {
   int showCount = 0;
   int hideCount = 0;
   int toggleCount = 0;
@@ -64,6 +64,9 @@ class FakeWindowController implements WindowController {
 
   @override
   bool get isVisible => _visible;
+
+  @override
+  Future<void> initialize() async {}
 
   @override
   Future<void> show() async {

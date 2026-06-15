@@ -11,14 +11,14 @@ import '../../domain/services/clipboard_writer.dart';
 import '../../domain/services/group_service.dart';
 import '../../domain/services/hotkey_service.dart';
 import '../../domain/services/launch_at_startup_service.dart';
-import '../../domain/services/window_controller.dart';
+import '../../domain/services/viewport_controller.dart';
 
 class AppController extends ChangeNotifier {
   final StoreRepository _storeRepository;
   final ClipboardHistoryService _historyService;
   final GroupService _groupService;
   final ClipboardWriter? _clipboardWriter;
-  final WindowController? _windowController;
+  final ViewportController? _windowController;
   final HotkeyService? _hotkeyService;
   final LaunchAtStartupService? _launchService;
   final AppLogger? _logger;
@@ -32,7 +32,7 @@ class AppController extends ChangeNotifier {
     required ClipboardHistoryService historyService,
     required GroupService groupService,
     ClipboardWriter? clipboardWriter,
-    WindowController? windowController,
+    ViewportController? windowController,
     HotkeyService? hotkeyService,
     LaunchAtStartupService? launchService,
     AppLogger? logger,

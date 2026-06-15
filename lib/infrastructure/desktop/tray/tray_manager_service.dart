@@ -4,16 +4,16 @@ import 'dart:async';
 import 'package:tray_manager/tray_manager.dart';
 
 import '../../../core/utils/app_logger.dart';
-import '../../../domain/services/window_controller.dart';
+import '../../../domain/services/viewport_controller.dart';
 
 class TrayManagerService with TrayListener {
-  final WindowController _windowController;
+  final ViewportController _windowController;
   final void Function() _onQuit;
   final AppLogger _logger;
   bool _initialized = false;
 
   TrayManagerService({
-    required WindowController windowController,
+    required ViewportController windowController,
     required void Function() onQuit,
     required AppLogger logger,
   })  : _windowController = windowController,

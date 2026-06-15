@@ -5,14 +5,14 @@ import 'package:screen_retriever/screen_retriever.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../../core/utils/app_logger.dart';
-import '../../../domain/services/window_controller.dart';
+import '../../../domain/services/viewport_controller.dart';
 
-const _windowWidth = 780.0;
-const _windowHeight = 720.0;
-const _windowMinWidth = 760.0;
-const _windowMinHeight = 640.0;
+const _viewportWidth = 780.0;
+const _viewportHeight = 720.0;
+const _viewportMinWidth = 760.0;
+const _viewportMinHeight = 640.0;
 
-class WindowManagerService implements WindowController {
+class WindowsViewportService implements ViewportController {
   final AppLogger _logger;
   bool _isVisible = false;
   bool _isTransitioning = false;
@@ -21,24 +21,26 @@ class WindowManagerService implements WindowController {
   @override
   bool get isVisible => _isVisible;
 
-  WindowManagerService({required AppLogger logger}) : _logger = logger;
+  WindowsViewportService({required AppLogger logger}) : _logger = logger;
 
+  @override
   Future<void> initialize() async {
     if (_initialized) return;
     _initialized = true;
 
     await windowManager.ensureInitialized();
-    windowManager.addListener(_WindowListener(this));
+    windowManager.addListener(_ViewportListener(this));
     await windowManager.setPreventClose(true);
 
     const windowOptions = WindowOptions(
-      size: Size(_windowWidth, _windowHeight),
-      minimumSize: Size(_windowMinWidth, _windowMinHeight),
+      size: Size(_viewportWidth, _viewportHeight),
+      minimumSize: Size(_viewportMinWidth, _viewportMinHeight),
       center: true,
       alwaysOnTop: true,
       skipTaskbar: true,
       title: 'CLIPER',
       titleBarStyle: TitleBarStyle.hidden,
+      windowButtonVisibility: false,
       backgroundColor: Color(0x00000000),
     );
 
@@ -46,14 +48,14 @@ class WindowManagerService implements WindowController {
       windowOptions,
       () async {
         await windowManager.setMinimumSize(
-          const Size(_windowMinWidth, _windowMinHeight),
+          const Size(_viewportMinWidth, _viewportMinHeight),
         );
         await windowManager.hide();
         _isVisible = false;
       },
     );
 
-    _logger.info('Window manager initialized');
+    _logger.info('Windows viewport initialized');
   }
 
   @override
@@ -63,12 +65,12 @@ class WindowManagerService implements WindowController {
 
     _isTransitioning = true;
     try {
-      await _positionWindow();
+      await _positionViewport();
       await windowManager.show();
       await windowManager.setAlwaysOnTop(true);
       await windowManager.focus();
       _isVisible = true;
-      _logger.debug('Window shown');
+      _logger.debug('Viewport shown');
     } finally {
       _isTransitioning = false;
     }
@@ -83,7 +85,7 @@ class WindowManagerService implements WindowController {
     try {
       await windowManager.hide();
       _isVisible = false;
-      _logger.debug('Window hidden');
+      _logger.debug('Viewport hidden');
     } finally {
       _isTransitioning = false;
     }
@@ -106,23 +108,23 @@ class WindowManagerService implements WindowController {
     if (!_initialized) await initialize();
   }
 
-  Future<void> _positionWindow() async {
+  Future<void> _positionViewport() async {
     try {
       final display = await _targetDisplay();
       final position = display.visiblePosition ?? Offset.zero;
       final size = display.visibleSize ?? display.size;
 
-      final x = position.dx + (size.width - _windowWidth) / 2;
-      final y = position.dy + (size.height - _windowHeight) / 2;
+      final x = position.dx + (size.width - _viewportWidth) / 2;
+      final y = position.dy + (size.height - _viewportHeight) / 2;
 
       final clampedX =
-          x.clamp(position.dx, position.dx + size.width - _windowWidth);
+          x.clamp(position.dx, position.dx + size.width - _viewportWidth);
       final clampedY =
-          y.clamp(position.dy, position.dy + size.height - _windowHeight);
+          y.clamp(position.dy, position.dy + size.height - _viewportHeight);
 
       await windowManager.setPosition(Offset(clampedX, clampedY));
     } catch (e, stack) {
-      _logger.error('Failed to position window', error: e, stackTrace: stack);
+      _logger.error('Failed to position viewport', error: e, stackTrace: stack);
     }
   }
 
@@ -143,15 +145,15 @@ class WindowManagerService implements WindowController {
     return screenRetriever.getPrimaryDisplay();
   }
 
-  void _onWindowFocus() {
+  void _onViewportFocus() {
     _isVisible = true;
   }
 
-  void _onWindowBlur() {
-    unawaited(_handleWindowBlur());
+  void _onViewportBlur() {
+    unawaited(_handleViewportBlur());
   }
 
-  void _onWindowClose() {
+  void _onViewportClose() {
     hide();
   }
 
@@ -165,24 +167,24 @@ class WindowManagerService implements WindowController {
     }
   }
 
-  Future<void> _handleWindowBlur() async {
+  Future<void> _handleViewportBlur() async {
     final visible = await _isNativeVisible();
     if (!visible && !_isVisible) return;
     await hide();
   }
 }
 
-class _WindowListener extends WindowListener {
-  final WindowManagerService _service;
+class _ViewportListener extends WindowListener {
+  final WindowsViewportService _service;
 
-  _WindowListener(this._service);
-
-  @override
-  void onWindowFocus() => _service._onWindowFocus();
+  _ViewportListener(this._service);
 
   @override
-  void onWindowBlur() => _service._onWindowBlur();
+  void onWindowFocus() => _service._onViewportFocus();
 
   @override
-  void onWindowClose() => _service._onWindowClose();
+  void onWindowBlur() => _service._onViewportBlur();
+
+  @override
+  void onWindowClose() => _service._onViewportClose();
 }

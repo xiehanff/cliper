@@ -14,7 +14,8 @@ import '../infrastructure/desktop/clipboard/clipboard_writer_impl.dart';
 import '../infrastructure/desktop/hotkey/hotkey_manager_service.dart';
 import '../infrastructure/desktop/launch/launch_at_startup_service_impl.dart';
 import '../infrastructure/desktop/tray/tray_manager_service.dart';
-import '../infrastructure/desktop/window/window_manager_service.dart';
+import '../infrastructure/desktop/viewport/macos_viewport_service.dart';
+import '../infrastructure/desktop/viewport/windows_viewport_service.dart';
 import '../infrastructure/models/store_serializer.dart';
 import '../infrastructure/persistence/clipboard_store_local_data_source.dart';
 import 'app.dart';
@@ -40,7 +41,9 @@ void runCliperApp() async {
     clock: () => DateTime.now().millisecondsSinceEpoch,
   );
 
-  final windowController = WindowManagerService(logger: logger);
+  final windowController = Platform.isMacOS
+      ? MacOSViewportService(logger: logger)
+      : WindowsViewportService(logger: logger);
   final clipboardWriter = ClipboardWriterImpl(logger: logger);
   final hotkeyService = HotkeyManagerService(
     onTriggered: () => windowController.toggle(),

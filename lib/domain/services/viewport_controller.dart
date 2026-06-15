@@ -1,4 +1,5 @@
-abstract interface class WindowController {
+abstract interface class ViewportController {
+  Future<void> initialize();
   Future<void> show();
   Future<void> hide();
   Future<void> toggle();
