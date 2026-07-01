@@ -67,6 +67,9 @@ class FakeWindowController implements ViewportController {
   bool get isVisible => _visible;
 
   @override
+  bool get hideWindowAfterItemActivation => true;
+
+  @override
   Future<void> initialize() async {}
 
   @override

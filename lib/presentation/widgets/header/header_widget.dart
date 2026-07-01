@@ -98,24 +98,26 @@ class _HeaderWidgetState extends State<HeaderWidget> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _ToolIconButton(
-                    tooltip: AppLocalizations.of(context).shortcut,
-                    onTap: _toggleRecording,
-                    highlighted: controller.isShortcutRecording,
-                    icon: Icon(
-                      Icons.keyboard_outlined,
-                      size: 18,
-                      color: controller.isShortcutRecording
-                          ? Colors.white
-                          : theme.secondaryText,
+                  if (controller.supportsGlobalShortcut) ...[
+                    _ToolIconButton(
+                      tooltip: AppLocalizations.of(context).shortcut,
+                      onTap: _toggleRecording,
+                      highlighted: controller.isShortcutRecording,
+                      icon: Icon(
+                        Icons.keyboard_outlined,
+                        size: 18,
+                        color: controller.isShortcutRecording
+                            ? Colors.white
+                            : theme.secondaryText,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  _ShortcutChip(
-                    recording: controller.isShortcutRecording,
-                    shortcut: controller.currentShortcut,
-                  ),
-                  const SizedBox(width: 12),
+                    const SizedBox(width: 6),
+                    _ShortcutChip(
+                      recording: controller.isShortcutRecording,
+                      shortcut: controller.currentShortcut,
+                    ),
+                    const SizedBox(width: 12),
+                  ],
                   _ToolIconButton(
                     tooltip: AppLocalizations.of(context).theme,
                     onTap: () => controller.switchTheme(

@@ -25,6 +25,7 @@ class SettingsHandler {
         _logger = logger;
 
   bool get isMacOS => Platform.isMacOS;
+  bool get supportsGlobalShortcut => !Platform.isLinux;
 
   ClipboardStore switchTheme(ClipboardStore store, String theme) {
     return store.copyWith(
@@ -45,6 +46,7 @@ class SettingsHandler {
   }
 
   Future<void> applyShortcutHotkey(String shortcut) async {
+    if (!supportsGlobalShortcut) return;
     try {
       await _hotkeyService?.unregister();
       await _hotkeyService?.register(shortcut);

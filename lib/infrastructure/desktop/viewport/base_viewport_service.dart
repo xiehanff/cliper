@@ -15,6 +15,15 @@ const viewportMinHeight = 640.0;
 class BaseViewportService implements ViewportController {
   final AppLogger _logger;
   final String _platformLabel;
+  final bool _alwaysOnTop;
+  final bool _skipTaskbar;
+  final bool _hideOnStartup;
+  final bool _hideOnBlur;
+  final bool _preventClose;
+  final bool _focusOnShow;
+  final bool _hideWindowAfterItemActivation;
+  final TitleBarStyle _titleBarStyle;
+  final bool _windowButtonVisibility;
   bool _isVisible = false;
   bool _isTransitioning = false;
   bool _initialized = false;
@@ -22,11 +31,32 @@ class BaseViewportService implements ViewportController {
   @override
   bool get isVisible => _isVisible;
 
+  @override
+  bool get hideWindowAfterItemActivation => _hideWindowAfterItemActivation;
+
   BaseViewportService({
     required AppLogger logger,
     required String platformLabel,
+    bool alwaysOnTop = true,
+    bool skipTaskbar = true,
+    bool hideOnStartup = true,
+    bool hideOnBlur = true,
+    bool preventClose = true,
+    bool focusOnShow = true,
+    bool hideWindowAfterItemActivation = true,
+    TitleBarStyle titleBarStyle = TitleBarStyle.hidden,
+    bool windowButtonVisibility = false,
   })  : _logger = logger,
-        _platformLabel = platformLabel;
+        _platformLabel = platformLabel,
+        _alwaysOnTop = alwaysOnTop,
+        _skipTaskbar = skipTaskbar,
+        _hideOnStartup = hideOnStartup,
+        _hideOnBlur = hideOnBlur,
+        _preventClose = preventClose,
+        _focusOnShow = focusOnShow,
+        _hideWindowAfterItemActivation = hideWindowAfterItemActivation,
+        _titleBarStyle = titleBarStyle,
+        _windowButtonVisibility = windowButtonVisibility;
   @override
   Future<void> initialize() async {
     if (_initialized) return;
@@ -34,18 +64,18 @@ class BaseViewportService implements ViewportController {
 
     await windowManager.ensureInitialized();
     windowManager.addListener(_ViewportListener(this));
-    await windowManager.setPreventClose(true);
+    await windowManager.setPreventClose(_preventClose);
 
-    const windowOptions = WindowOptions(
-      size: Size(viewportWidth, viewportHeight),
-      minimumSize: Size(viewportMinWidth, viewportMinHeight),
+    final windowOptions = WindowOptions(
+      size: const Size(viewportWidth, viewportHeight),
+      minimumSize: const Size(viewportMinWidth, viewportMinHeight),
       center: true,
-      alwaysOnTop: true,
-      skipTaskbar: true,
+      alwaysOnTop: _alwaysOnTop,
+      skipTaskbar: _skipTaskbar,
       title: 'CLIPER',
-      titleBarStyle: TitleBarStyle.hidden,
-      windowButtonVisibility: false,
-      backgroundColor: Color(0x00000000),
+      titleBarStyle: _titleBarStyle,
+      windowButtonVisibility: _windowButtonVisibility,
+      backgroundColor: const Color(0x00000000),
     );
 
     await windowManager.waitUntilReadyToShow(
@@ -54,8 +84,13 @@ class BaseViewportService implements ViewportController {
         await windowManager.setMinimumSize(
           const Size(viewportMinWidth, viewportMinHeight),
         );
-        await windowManager.hide();
-        _isVisible = false;
+        if (_hideOnStartup) {
+          await windowManager.hide();
+          _isVisible = false;
+        } else {
+          await windowManager.show();
+          _isVisible = true;
+        }
       },
     );
 
@@ -71,8 +106,10 @@ class BaseViewportService implements ViewportController {
     try {
       await _positionViewport();
       await windowManager.show();
-      await windowManager.setAlwaysOnTop(true);
-      await windowManager.focus();
+      await windowManager.setAlwaysOnTop(_alwaysOnTop);
+      if (_focusOnShow) {
+        await windowManager.focus();
+      }
       _isVisible = true;
       _logger.debug('Viewport shown');
     } finally {
@@ -157,10 +194,6 @@ class BaseViewportService implements ViewportController {
     unawaited(_handleViewportBlur());
   }
 
-  void _onViewportClose() {
-    hide();
-  }
-
   Future<bool> _isNativeVisible() async {
     try {
       return await windowManager.isVisible();
@@ -172,9 +205,18 @@ class BaseViewportService implements ViewportController {
   }
 
   Future<void> _handleViewportBlur() async {
+    if (!_hideOnBlur) return;
     final visible = await _isNativeVisible();
     if (!visible && !_isVisible) return;
     await hide();
+  }
+
+  void handleWindowClose() {
+    if (_preventClose) {
+      hide();
+      return;
+    }
+    _isVisible = false;
   }
 }
 
@@ -190,5 +232,5 @@ class _ViewportListener extends WindowListener {
   void onWindowBlur() => _service._onViewportBlur();
 
   @override
-  void onWindowClose() => _service._onViewportClose();
+  void onWindowClose() => _service.handleWindowClose();
 }

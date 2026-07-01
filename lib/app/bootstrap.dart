@@ -17,6 +17,7 @@ import '../infrastructure/desktop/hotkey/hotkey_manager_service.dart';
 import '../infrastructure/desktop/launch/launch_at_startup_service_impl.dart';
 import '../infrastructure/desktop/platform/single_instance_lock.dart';
 import '../infrastructure/desktop/tray/tray_manager_service.dart';
+import '../infrastructure/desktop/viewport/linux_viewport_service.dart';
 import '../infrastructure/desktop/viewport/macos_viewport_service.dart';
 import '../infrastructure/desktop/viewport/windows_viewport_service.dart';
 import '../infrastructure/models/store_serializer.dart';
@@ -46,12 +47,16 @@ void runCliperApp() async {
 
   final windowController = Platform.isMacOS
       ? MacOSViewportService(logger: logger)
-      : WindowsViewportService(logger: logger);
+      : Platform.isLinux
+          ? LinuxViewportService(logger: logger)
+          : WindowsViewportService(logger: logger);
   final clipboardWriter = ClipboardWriterImpl(logger: logger);
-  final hotkeyService = HotkeyManagerService(
-    onTriggered: () => windowController.toggle(),
-    logger: logger,
-  );
+  final hotkeyService = Platform.isLinux
+      ? null
+      : HotkeyManagerService(
+          onTriggered: () => windowController.toggle(),
+          logger: logger,
+        );
   final launchService = LaunchAtStartupServiceImpl(logger: logger);
   final imageLoader = ImageLoaderServiceImpl(logger: logger);
   final settingsHandler = SettingsHandler(
@@ -86,15 +91,17 @@ void runCliperApp() async {
     clock: () => DateTime.now().millisecondsSinceEpoch,
   );
 
-  final trayService = TrayManagerService(
-    windowController: windowController,
-    onQuit: () async {
-      await singleInstanceLock.release();
-      await windowManager.destroy();
-      exit(0);
-    },
-    logger: logger,
-  );
+  final trayService = Platform.isLinux
+      ? null
+      : TrayManagerService(
+          windowController: windowController,
+          onQuit: () async {
+            await singleInstanceLock.release();
+            await windowManager.destroy();
+            exit(0);
+          },
+          logger: logger,
+        );
 
   runApp(
     ChangeNotifierProvider<AppController>(
@@ -113,16 +120,16 @@ void runCliperApp() async {
 }
 
 Future<void> _startServices({
-  required TrayManagerService trayService,
-  required HotkeyManagerService hotkeyService,
+  required TrayManagerService? trayService,
+  required HotkeyManagerService? hotkeyService,
   required LaunchAtStartupServiceImpl launchService,
   required ClipboardMonitorManager clipboardMonitor,
   required AppController appController,
 }) async {
-  await trayService.initialize();
+  await trayService?.initialize();
   await appController.loadStore();
 
-  await hotkeyService.register(appController.currentShortcut);
+  await hotkeyService?.register(appController.currentShortcut);
   await launchService.setEnabled(appController.autoLaunch);
 
   clipboardMonitor.start();

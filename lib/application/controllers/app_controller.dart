@@ -62,12 +62,14 @@ class AppController extends ChangeNotifier {
   String get currentShortcut => _store.settings.shortcut;
   bool get autoLaunch => _store.settings.autoLaunch;
   bool get isMacOS => _settings.isMacOS;
+  bool get supportsGlobalShortcut => _settings.supportsGlobalShortcut;
   ImageLoaderService? get imageLoader => _imageLoader;
 
   // Shortcut recording proxies
   bool get isShortcutRecording => _settings.shortcutRecording;
 
   void startShortcutRecording() {
+    if (!supportsGlobalShortcut) return;
     _settings.shortcutRecording = true;
     notifyListeners();
   }
@@ -239,10 +241,12 @@ class AppController extends ChangeNotifier {
     notifyListeners();
     _persist();
 
-    try {
-      await _windowController?.hide();
-    } catch (e, stack) {
-      _logger?.error('Failed to hide window', error: e, stackTrace: stack);
+    if (_windowController?.hideWindowAfterItemActivation ?? true) {
+      try {
+        await _windowController?.hide();
+      } catch (e, stack) {
+        _logger?.error('Failed to hide window', error: e, stackTrace: stack);
+      }
     }
   }
 
