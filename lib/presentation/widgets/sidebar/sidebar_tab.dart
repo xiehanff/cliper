@@ -104,90 +104,64 @@ class _SidebarTabState extends State<SidebarTab> {
             borderRadius: BorderRadius.circular(10),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(
-              children: [
-                if (!widget.isRealtime)
-                  GestureDetector(
-                    onTap: _openPicker,
-                    behavior: HitTestBehavior.opaque,
-                    child: ColorDot(
-                      color: color,
-                      size: 10,
-                      selected: false,
-                      borderColor: theme.brightness == Brightness.light
-                          ? Colors.black.withValues(alpha: 0.12)
-                          : Colors.transparent,
-                    ),
+          child: Row(
+            children: [
+              if (!widget.isRealtime)
+                GestureDetector(
+                  onTap: _openPicker,
+                  behavior: HitTestBehavior.opaque,
+                  child: ColorDot(
+                    color: color,
+                    size: 10,
+                    selected: false,
+                    borderColor: theme.brightness == Brightness.light
+                        ? Colors.black.withValues(alpha: 0.12)
+                        : Colors.transparent,
                   ),
-                if (!widget.isRealtime) const SizedBox(width: 8),
-                Expanded(
-                  child: _editing && !widget.isRealtime
-                      ? SizedBox(
-                          height: 24,
-                          child: TextField(
-                            controller: _editController,
-                            autofocus: true,
-                            style: TextStyle(
-                              color: theme.primaryText,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              height: 1.0,
-                            ),
-                            decoration: const InputDecoration(
-                              isDense: true,
-                              contentPadding: EdgeInsets.zero,
-                              border: InputBorder.none,
-                            ),
-                            onSubmitted: (_) => _finishEditing(),
-                            onTapOutside: (_) => _finishEditing(),
-                          ),
-                        )
-                      : Text(
-                          name,
-                          style: TextStyle(
-                            color: widget.selected
-                                ? Colors.white
-                                : theme.primaryText,
-                            fontSize: 13,
-                            fontWeight: widget.selected
-                                ? FontWeight.w600
-                                : FontWeight.w500,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
                 ),
-                if (!widget.isRealtime)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 2),
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: Center(
-                        child: AnimatedOpacity(
-                          opacity: _hover ? 1 : 0,
-                          duration: const Duration(milliseconds: 120),
-                          child: IgnorePointer(
-                            ignoring: !_hover,
-                            child: GestureDetector(
-                              onTap: _startEditing,
-                              behavior: HitTestBehavior.opaque,
-                              child: Icon(
-                                Icons.edit_outlined,
-                                size: 12,
-                                color: widget.selected
-                                    ? Colors.white.withValues(alpha: 0.7)
-                                    : theme.secondaryText,
-                              ),
-                            ),
+              if (!widget.isRealtime) const SizedBox(width: 8),
+              Expanded(
+                child: _editing && !widget.isRealtime
+                    ? SizedBox(
+                        height: 24,
+                        child: TextField(
+                          controller: _editController,
+                          autofocus: true,
+                          style: TextStyle(
+                            color: theme.primaryText,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            height: 1.0,
                           ),
+                          decoration: const InputDecoration(
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero,
+                            border: InputBorder.none,
+                          ),
+                          onSubmitted: (_) => _finishEditing(),
+                          onTapOutside: (_) => _finishEditing(),
                         ),
+                      )
+                    : Text(
+                        name,
+                        style: TextStyle(
+                          color: widget.selected
+                              ? Colors.white
+                              : theme.primaryText,
+                          fontSize: 13,
+                          fontWeight: widget.selected
+                              ? FontWeight.w600
+                              : FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ),
-                if (!widget.isRealtime)
-                  SizedBox(
-                    width: 24,
-                    height: 24,
+              ),
+              if (!widget.isRealtime)
+                Padding(
+                  padding: const EdgeInsets.only(right: 2),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
                     child: Center(
                       child: AnimatedOpacity(
                         opacity: _hover ? 1 : 0,
@@ -195,31 +169,57 @@ class _SidebarTabState extends State<SidebarTab> {
                         child: IgnorePointer(
                           ignoring: !_hover,
                           child: GestureDetector(
-                            onTap: widget.onDelete,
+                            onTap: _startEditing,
                             behavior: HitTestBehavior.opaque,
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Icon(
-                                Icons.close,
-                                size: 14,
-                                color: widget.selected
-                                    ? Colors.white.withValues(alpha: 0.8)
-                                    : theme.secondaryText,
-                              ),
+                            child: Icon(
+                              Icons.edit_outlined,
+                              size: 12,
+                              color: widget.selected
+                                  ? Colors.white.withValues(alpha: 0.7)
+                                  : theme.secondaryText,
                             ),
                           ),
                         ),
                       ),
                     ),
                   ),
-              ],                      
-            ),                        
-          ),                          
-        ),                            
-      );                              
+                ),
+              if (!widget.isRealtime)
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Center(
+                    child: AnimatedOpacity(
+                      opacity: _hover ? 1 : 0,
+                      duration: const Duration(milliseconds: 120),
+                      child: IgnorePointer(
+                        ignoring: !_hover,
+                        child: GestureDetector(
+                          onTap: widget.onDelete,
+                          behavior: HitTestBehavior.opaque,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Icon(
+                              Icons.close,
+                              size: 14,
+                              color: widget.selected
+                                  ? Colors.white.withValues(alpha: 0.8)
+                                  : theme.secondaryText,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
 
     if (_pickerOpen && !widget.isRealtime) {
       tab = Column(
@@ -255,10 +255,9 @@ class _SidebarTabState extends State<SidebarTab> {
                       borderColor: theme.brightness == Brightness.light
                           ? Colors.black.withValues(alpha: 0.12)
                           : Colors.transparent,
-                      selectedBorderColor:
-                          theme.brightness == Brightness.light
-                              ? Colors.black.withValues(alpha: 0.35)
-                              : Colors.white,
+                      selectedBorderColor: theme.brightness == Brightness.light
+                          ? Colors.black.withValues(alpha: 0.35)
+                          : Colors.white,
                     ),
                   )
                   .toList(),

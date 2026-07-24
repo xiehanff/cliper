@@ -135,7 +135,8 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                   _ToolIconButton(
                     tooltip: AppLocalizations.of(context).language,
                     onTap: () => controller.switchLanguage(
-                      controller.currentLanguage == AppConstants.supportedLanguages[0]
+                      controller.currentLanguage ==
+                              AppConstants.supportedLanguages[0]
                           ? AppConstants.supportedLanguages[1]
                           : AppConstants.supportedLanguages[0],
                     ),
@@ -191,9 +192,7 @@ class _ShortcutChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.25),
         borderRadius: BorderRadius.circular(6),
-        border: recording
-            ? Border.all(color: theme.purpleAccentDark)
-            : null,
+        border: recording ? Border.all(color: theme.purpleAccentDark) : null,
       ),
       child: Text(
         label,

@@ -66,12 +66,10 @@ class TrayManagerService with TrayListener {
   }
 
   @override
-  void onTrayIconMouseDown() {
-  }
+  void onTrayIconMouseDown() {}
 
   @override
-  void onTrayIconMouseUp() {
-  }
+  void onTrayIconMouseUp() {}
 
   @override
   void onTrayIconRightMouseDown() {

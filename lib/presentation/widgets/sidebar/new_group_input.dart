@@ -155,10 +155,10 @@ class _NewGroupInputState extends State<NewGroupInput> {
                           borderColor: theme.brightness == Brightness.light
                               ? Colors.black.withValues(alpha: 0.12)
                               : Colors.transparent,
-                          selectedBorderColor: theme.brightness ==
-                                  Brightness.light
-                              ? Colors.black.withValues(alpha: 0.35)
-                              : Colors.white,
+                          selectedBorderColor:
+                              theme.brightness == Brightness.light
+                                  ? Colors.black.withValues(alpha: 0.35)
+                                  : Colors.white,
                         ),
                       )
                       .toList(),
@@ -172,8 +172,6 @@ class _NewGroupInputState extends State<NewGroupInput> {
   }
 
   String _duplicateNameText(String language) {
-    return language == 'en'
-        ? 'Group name already exists'
-        : '分组名称已存在';
+    return language == 'en' ? 'Group name already exists' : '分组名称已存在';
   }
 }

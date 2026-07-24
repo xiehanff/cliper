@@ -67,8 +67,8 @@ class SettingsHandler {
     }
   }
 
-  void handleShortcutRecordingKeyEvent(KeyEvent event,
-      void Function(String) onShortcutSet) {
+  void handleShortcutRecordingKeyEvent(
+      KeyEvent event, void Function(String) onShortcutSet) {
     if (!shortcutRecording || event is! KeyDownEvent) return;
 
     final key = event.logicalKey;

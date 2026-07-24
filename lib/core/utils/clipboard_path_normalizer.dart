@@ -13,4 +13,3 @@ String normalizeClipboardFilePath(String value) {
     return value.toLowerCase();
   }
 }
-

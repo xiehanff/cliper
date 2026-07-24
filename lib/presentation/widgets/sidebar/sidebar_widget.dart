@@ -100,7 +100,7 @@ class _NewGroupButton extends StatelessWidget {
             Icon(Icons.add, size: 16, color: theme.purpleAccent),
             const SizedBox(width: 6),
             Flexible(
-            child: Text(
+              child: Text(
                 l10n.newGroup,
                 style: TextStyle(
                   color: enabled ? theme.purpleAccent : theme.secondaryText,

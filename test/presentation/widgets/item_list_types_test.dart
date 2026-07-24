@@ -6,8 +6,7 @@ import '../helpers/fake_services.dart';
 import '../helpers/widget_test_app.dart';
 
 void main() {
-  const transparentPngDataUrl =
-      'data:image/png;base64,'
+  const transparentPngDataUrl = 'data:image/png;base64,'
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jx7cAAAAASUVORK5CYII=';
 
   testWidgets('item list renders text, image and file items', (tester) async {

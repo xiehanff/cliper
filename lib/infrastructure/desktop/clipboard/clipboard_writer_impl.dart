@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:super_clipboard/super_clipboard.dart' hide ClipboardWriter;
@@ -29,7 +30,7 @@ class ClipboardWriterImpl implements ClipboardWriter {
       case ClipboardItemType.image:
         await _writeImage(clipboard, item.image);
       case ClipboardItemType.file:
-        await _writeText(clipboard, item.files.join('\n'));
+        await _writeFiles(clipboard, item.files);
     }
   }
 
@@ -38,6 +39,20 @@ class ClipboardWriterImpl implements ClipboardWriter {
     final writer = DataWriterItem();
     writer.add(Formats.plainText(text));
     await clipboard.write([writer]);
+  }
+
+  Future<void> _writeFiles(
+      SystemClipboard clipboard, List<String> files) async {
+    if (files.isEmpty) return;
+    final items = <DataWriterItem>[];
+    for (final filePath in files) {
+      final writer = DataWriterItem();
+      writer.add(
+        Formats.fileUri(Uri.file(filePath, windows: Platform.isWindows)),
+      );
+      items.add(writer);
+    }
+    await clipboard.write(items);
   }
 
   Future<void> _writeImage(SystemClipboard clipboard, String image) async {

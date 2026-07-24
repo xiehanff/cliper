@@ -67,7 +67,10 @@ class ContentTypeDetector {
           inString = !inString;
           continue;
         }
-        if (!inString && ch == '/' && i + 1 < line.length && line[i + 1] == '/') {
+        if (!inString &&
+            ch == '/' &&
+            i + 1 < line.length &&
+            line[i + 1] == '/') {
           slashPos = i;
           break;
         }

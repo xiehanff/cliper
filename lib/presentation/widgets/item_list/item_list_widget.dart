@@ -62,56 +62,56 @@ class _ItemListWidgetState extends State<ItemListWidget> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
       child: Stack(
-      children: [
-        ScrollConfiguration(
-          behavior: _NoScrollbarBehavior(),
-          child: ListView.builder(
-            controller: _scrollController,
-            padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
-            itemCount: widget.items.length,
-            itemBuilder: (context, index) {
-              final item = widget.items[index];
-              return ItemCardWidget(
-                key: ValueKey(item.id),
-                item: item,
-                groupId: widget.groupId,
-              );
-            },
+        children: [
+          ScrollConfiguration(
+            behavior: _NoScrollbarBehavior(),
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
+              itemCount: widget.items.length,
+              itemBuilder: (context, index) {
+                final item = widget.items[index];
+                return ItemCardWidget(
+                  key: ValueKey(item.id),
+                  item: item,
+                  groupId: widget.groupId,
+                );
+              },
+            ),
           ),
-        ),
-        if (_showTopButton)
-          Positioned(
-            top: 18,
-            right: 18,
-            child: GestureDetector(
-              onTap: _scrollToTop,
-              behavior: HitTestBehavior.opaque,
-              child: Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.58),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.18),
-                      blurRadius: 18,
+          if (_showTopButton)
+            Positioned(
+              top: 18,
+              right: 18,
+              child: GestureDetector(
+                onTap: _scrollToTop,
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.58),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.18),
+                        blurRadius: 18,
+                      ),
+                    ],
+                  ),
+                  alignment: Alignment.center,
+                  child: const Text(
+                    'top',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
                     ),
-                  ],
-                ),
-                alignment: Alignment.center,
-                child: const Text(
-                  'top',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
             ),
-          ),
-      ],
+        ],
       ),
     );
   }
