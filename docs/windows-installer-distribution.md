@@ -61,7 +61,7 @@ make package-windows
 生成后的安装包在：
 
 ```text
-windows/installer/dist/CLIPER_Setup_1.0.0.exe
+windows/installer/dist/CLIPER_Setup_1.1.3.exe
 ```
 
 如果后面版本号变化，文件名会跟随 `pubspec.yaml` 的版本号更新。
@@ -81,7 +81,7 @@ windows/installer/dist/CLIPER_Setup_1.0.0.exe
 直接把这个文件发给用户：
 
 ```text
-CLIPER_Setup_1.0.0.exe
+CLIPER_Setup_1.1.3.exe
 ```
 
 附一句最小说明就够了：

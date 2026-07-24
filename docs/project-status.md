@@ -1,6 +1,6 @@
 # Cliper Flutter 重构项目状态文档
 
-> 文档生成时间：2026-06-14  
+> 文档生成时间：2026-07-24
 > 项目路径：`D:\xiehan\flutter\cliper`  
 > 源项目真值源：`D:\xiehan\github\cliper`  
 > Flutter 版本：`3.44.2`（FVM 管理）
@@ -45,18 +45,18 @@
 - [x] `TrayManagerService`：托盘图标、点击显隐、退出菜单。
 - [x] `HotkeyManagerService`：注册/注销、格式归一化、默认 `CommandOrControl+\`。
 - [x] `ClipboardMonitorManager`：`file → text → image` 优先级监听。
-- [x] `ClipboardWriterImpl`：文本/图片写回，文件条目回写为换行拼接路径文本。
+- [x] `ClipboardWriterImpl`：文本/图片写回，文件条目回写为原生文件 URI 剪贴板对象。
 - [x] Windows 文件剪贴板增强：新增 C++ MethodChannel 读取 `CF_HDROP` / `FileNameW`。
 - [x] `LaunchAtStartupServiceImpl`：Windows/macOS 自启动读写，开发环境降级。
 - [x] macOS 后台模式：`LSUIElement` 隐藏 Dock、关闭窗口不退出。
 
 ### 1.5 测试与质量（F1-F4）
 
-- [x] 单元测试 34 个：覆盖 store 默认值、序列化、历史规则、分组规则、控制器行为。
-- [x] Widget 测试 14 个：覆盖主题/语言切换、空状态、新建分组、设置浮层、颜色选择器、快捷键录制、三类条目渲染。
+- [x] 单元/Widget 测试：50 passed，2 skipped（Windows 条件测试）。
 - [x] `fvm flutter analyze` 通过：无错误/警告/信息。
 - [x] `fvm dart format lib test` 已执行。
 - [x] Windows debug/release 构建均通过。
+- [x] macOS Release 构建通过，已生成 `build/macos/CLIPER_1.1.3.dmg`。
 - [x] Windows 应用可启动并保持运行。
 
 ---
@@ -67,7 +67,7 @@
 
 | 项目 | 状态 | 说明 |
 |---|---|---|
-| macOS 编译 | 待验证 | 当前环境为 Windows，无法执行 `fvm flutter build macos` |
+| macOS 编译 | 已验证 | `fvm flutter build macos --release` 成功，已生成 `build/macos/CLIPER_1.1.3.dmg` |
 | macOS 托盘 | 待验证 | 配置已就绪，未真实运行 |
 | macOS 快捷键 | 待验证 | 配置已就绪，未真实运行 |
 | macOS Dock 隐藏 | 待验证 | `Info.plist` 已加 `LSUIElement`，未真实运行 |
@@ -93,10 +93,10 @@ fvm flutter run -d macos
 - 拖拽条目到分组/分组之间/拖回实时历史
 - 多显示器下窗口位置稳定性
 
-### 2.3 文件条目完美回写
+### 2.3 文件条目系统对象回写
 
-- 当前文件条目双击后回写为「换行拼接的路径文本」。
-- 规格允许第一版如此降级，但未实现与 Electron 版完全等价的系统文件剪贴板对象恢复。
+- 当前已实现文件条目原生回写，采用文件 URI 剪贴板对象写回系统。
+- 仍需在 macOS 设备上手工验证 Finder 的真实粘贴行为。
 
 ---
 
@@ -163,9 +163,8 @@ fvm flutter run -d macos
 ### 4.2 可选优化（中低优先级）
 
 1. 升级桌面插件到最新版本，重新验证兼容性。
-2. 补全文件条目的系统文件剪贴板对象回写（Windows/macOS 原生实现）。
-3. 增加崩溃恢复/关键操作同步保存机制。
-4. 补充更多边界测试（如多显示器定位、快捷键冲突、大图片序列化）。
+2. 增加崩溃恢复/关键操作同步保存机制。
+3. 补充更多边界测试（如多显示器定位、快捷键冲突、大图片序列化）。
 
 ---
 
@@ -176,11 +175,12 @@ fvm flutter run -d macos
 | 依赖安装 | `fvm flutter pub get` | ✅ 通过 |
 | 静态分析 | `fvm flutter analyze` | ✅ `No issues found!` |
 | 代码格式化 | `fvm dart format lib test` | ✅ 已格式化 |
-| 单元测试 | `fvm flutter test` | ✅ 48 个测试全部通过 |
+| 单元测试 | `fvm flutter test` | ✅ 50 passed，2 skipped |
 | Windows Debug 构建 | `fvm flutter build windows --debug` | ✅ 成功 |
 | Windows Release 构建 | `fvm flutter build windows --release` | ✅ 成功 |
 | Windows 启动验证 | 运行 `build\windows\x64\runner\Debug\cliper.exe` | ✅ 5 秒内未异常退出 |
-| macOS 构建验证 | `fvm flutter build macos` | ❌ 未执行（环境限制） |
+| macOS Release 构建 | `fvm flutter build macos --release` | ✅ 成功 |
+| macOS DMG 打包 | `hdiutil create -volname CLIPER -srcfolder ...` | ✅ 成功 |
 | macOS 运行验证 | `fvm flutter run -d macos` | ❌ 未执行（环境限制） |
 
 ---
@@ -211,7 +211,7 @@ fvm flutter run -d macos
 - `lib/infrastructure/desktop/tray/tray_manager_service.dart`：托盘。
 - `lib/infrastructure/desktop/hotkey/hotkey_manager_service.dart`：全局快捷键。
 - `lib/infrastructure/desktop/clipboard/clipboard_monitor_manager.dart`：剪贴板监听。
-- `lib/infrastructure/desktop/clipboard/clipboard_writer_impl.dart`：剪贴板写回。
+- `lib/infrastructure/desktop/clipboard/clipboard_writer_impl.dart`：剪贴板写回，文件条目原生写回。
 - `lib/infrastructure/desktop/launch/launch_at_startup_service_impl.dart`：自启动。
 - `windows/runner/clipboard_channel.cpp/.h`：Windows 文件剪贴板平台通道。
 - `macos/Runner/Info.plist`：macOS 后台模式配置。
@@ -227,4 +227,4 @@ fvm flutter run -d macos
 
 ## 7. 结论
 
-本项目已完成规格中所有 P0 主链路的代码实现，Windows 侧通过构建、分析和自动化测试验证，应用可正常启动。macOS 侧代码与配置已就绪，但需在真实 macOS 设备上完成最终编译与运行验证。UI 交互与系统级行为的主要未决项均为「未在真实 GUI 环境下完整手工测试」，而非已知代码缺陷。
+本项目已完成规格中所有 P0 主链路的代码实现，Windows 侧通过构建、分析和自动化测试验证，应用可正常启动。macOS 侧代码与配置已就绪，Release 构建与 dmg 打包已完成，但真实运行与 GUI 交互仍需在 macOS 设备上继续验证。UI 交互与系统级行为的主要未决项均为「未在真实 GUI 环境下完整手工测试」，而非已知代码缺陷。

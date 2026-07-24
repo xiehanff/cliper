@@ -553,12 +553,12 @@ waitingForKey = Waiting for keys
 
 - 文本条目写回文本
 - 图片条目写回图片
-- 文件条目写回时，至少要恢复为换行拼接路径文本
+- 文件条目写回原生文件 URI 剪贴板对象
 
 说明：
 
-- 如果 Flutter 桌面插件无法完整恢复系统“文件剪贴板对象”，Windows 下允许第一版回写为文本路径，但“读取文件路径并入库”必须实现。
-- 如果能补齐原生实现，则应优先做到与 Electron 完全等价。
+- 文件条目写回应优先保持系统级文件对象语义，避免退化为纯文本路径。
+- 真实粘贴行为仍需在 Windows/macOS 设备上验证。
 
 ### 10.3 窗口显示与隐藏
 
@@ -849,7 +849,7 @@ lib/app/bootstrap.dart
 |---|---|
 | `AppController` | 整体状态源，协调启动、监听、存储、广播刷新 |
 | `ClipboardMonitorManager` | 监听系统剪贴板变化，做类型识别与去重 |
-| `ClipboardWriteManager` | 将条目写回系统剪贴板 |
+| `ClipboardWriteManager` | 将条目写回系统剪贴板（文本 / 图片 / 文件 URI） |
 | `WindowManagerService` | 窗口创建、显示、隐藏、焦点状态管理 |
 | `TrayManagerService` | 托盘创建、点击行为、退出菜单 |
 | `HotkeyManagerService` | 全局快捷键注册、更新、释放 |
