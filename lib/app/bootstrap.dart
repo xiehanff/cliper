@@ -63,7 +63,7 @@ void runCliperApp() async {
 
   final acquired = await singleInstanceLock.acquire();
   if (!acquired) {
-    return;
+    exit(0);
   }
 
   await windowController.initialize();
