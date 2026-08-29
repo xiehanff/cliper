@@ -59,8 +59,8 @@ class AppTheme {
     purpleAccent: AppColors.accent,
     purpleAccentDark: AppColors.accentDark,
     purpleAccentLight: AppColors.accentLight,
-    cardBackground: Color(0xFFF2F2F5),
-    cardHover: Color(0xFFEAEAF0),
+    cardBackground: Color(0xFFEDEDF1),
+    cardHover: Color(0xFFE5E5EB),
     borderColor: AppColors.accentBorder,
     brightness: Brightness.light,
   );
