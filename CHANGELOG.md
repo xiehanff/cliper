@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- 发布流程改为 tag 触发：推送 `v*` tag 时才创建 GitHub Release（`--verify-tag` 校验 tag，Release Notes 从 `CHANGELOG.md` 提取对应版本段落，缺失时回退为简短说明）；master 推送只构建并上传 artifact，不再自动发版。同时对 `on: push` 增加分支过滤，避免无关分支消耗构建时长
+
 ## [1.1.4] - 2026-08-30
 
 ### Added

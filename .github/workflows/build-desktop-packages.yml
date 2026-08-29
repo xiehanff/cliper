@@ -2,6 +2,8 @@ name: Build Desktop Packages
 
 on:
   push:
+    branches: [master]
+    tags: ['v*']
   workflow_dispatch:
 
 permissions:
@@ -89,11 +91,10 @@ jobs:
           retention-days: 30
 
   release:
-    name: GitHub Release
-    runs-on: ubuntu-latest
+    name: Publish GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
     needs: [windows, macos]
-    # 仅 master 分支创建 Release;其他分支只构建并上传 artifact
-    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: write
@@ -109,24 +110,26 @@ jobs:
           path: dist
           merge-multiple: true
 
-      - name: Create or update release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # cliper 的 CHANGELOG 采用 `## [1.1.4] - 日期` 格式,匹配时需带方括号
+      - name: Extract release notes from CHANGELOG
         run: |
-          version="$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml | head -n 1 | cut -d'+' -f1)"
-          if [ -z "$version" ]; then
-            echo "Missing version in pubspec.yaml" >&2
-            exit 1
+          TAG="${GITHUB_REF_NAME#v}"
+          awk -v ver="$TAG" '
+            index($0, "## [" ver "]") == 1 { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md | sed -e '/./,$!d' > RELEASE_NOTES.md
+          if [ ! -s RELEASE_NOTES.md ]; then
+            echo "Release ${GITHUB_REF_NAME}" > RELEASE_NOTES.md
           fi
-          tag="v${version}"
-          echo "Releasing ${tag}"
-          ls -l dist
-          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
-            gh release upload "$tag" dist/* --clobber --repo "$GITHUB_REPOSITORY"
-          else
-            gh release create "$tag" dist/* \
-              --title "CLIPER ${tag}" \
-              --generate-notes \
-              --latest \
-              --repo "$GITHUB_REPOSITORY"
-          fi
+
+      - name: Create release and upload packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "CLIPER ${GITHUB_REF_NAME}" \
+            --notes-file RELEASE_NOTES.md \
+            --verify-tag \
+            dist/* \
+          || gh release upload "${GITHUB_REF_NAME}" dist/* --clobber
