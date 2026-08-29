@@ -2,9 +2,13 @@
 
 ## [Unreleased]
 
+## [1.1.5] - 2026-08-30
+
 ### Changed
 
+- 明亮模式条目卡片背景色再调暗一档（`#F2F2F5` → `#EDEDF1`），hover 色同步调整
 - 发布流程改为 tag 触发：推送 `v*` tag 时才创建 GitHub Release（`--verify-tag` 校验 tag，Release Notes 从 `CHANGELOG.md` 提取对应版本段落，缺失时回退为简短说明）；master 推送只构建并上传 artifact，不再自动发版。同时对 `on: push` 增加分支过滤，避免无关分支消耗构建时长
+- 发布版本号更新为 `1.1.5`
 
 ## [1.1.4] - 2026-08-30
 
