@@ -19,7 +19,7 @@ CLIPER lives in your system tray and pops up a floating panel when you need it. 
 
 ## Download
 
-Installers are built automatically on every push by [GitHub Actions](https://github.com/xiehanff/cliper/actions/workflows/build-desktop-packages.yml) — grab the latest `CLIPER_Setup_<version>.exe` (Windows) or `cliper-<version>.dmg` (macOS) from the run artifacts. To build locally, see `docs/windows-installer-distribution.md` and `scripts/build_macos_dmg.sh`.
+Prebuilt installers are published on the [Releases](https://github.com/xiehanff/cliper/releases) page — grab `CLIPER_Setup_<version>.exe` (Windows) or `cliper-<version>.dmg` (macOS). Every push to `master` rebuilds and updates the release for the current `pubspec.yaml` version via [GitHub Actions](https://github.com/xiehanff/cliper/actions/workflows/build-desktop-packages.yml); branch builds are available as run artifacts.
 
 ## Features
 

@@ -7,6 +7,7 @@
 ### Added
 
 - GitHub Actions 打包流水线（`.github/workflows/build-desktop-packages.yml`）：push 或手动触发时自动构建 Windows Inno Setup 安装包与 macOS DMG，产物上传为 artifact（保留 30 天）
+- master 分支推送后自动创建/更新 GitHub Release `v<版本>`，安装包作为 Release 附件发布，用户可直接从 Releases 页面下载
 - macOS DMG 打包脚本 `scripts/build_macos_dmg.sh`，支持 `--skip-build` 复用已有 Release 构建
 
 ### Changed

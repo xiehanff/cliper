@@ -64,6 +64,7 @@ make package-windows
 - Windows job：`flutter build windows --release` 后调用 `windows/installer/build_installer.ps1 -SkipBuild` 生成安装包
 - 产物上传为 artifact（名称 `cliper-windows-<run_number>`，保留 30 天），在仓库 Actions 页面下载
 - macOS job 同理生成 `cliper-<版本>.dmg`（artifact 名称 `cliper-macos-<run_number>`）
+- **master 分支推送**：构建完成后自动创建/更新 GitHub Release `v<版本>`（版本号取自 `pubspec.yaml`），安装包作为 Release 附件发布，用户直接从 Releases 页面下载；其他分支只上传 artifact，不产生 Release
 
 本地已构建 Release 且只想重新打包时，CI 与本地使用的是同一套脚本，产物一致。
 
