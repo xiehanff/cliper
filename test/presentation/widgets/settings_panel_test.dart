@@ -17,7 +17,8 @@ void main() {
 
     expect(find.text('设置'), findsOneWidget);
 
-    await tester.tap(find.text('关闭'));
+    // 浮窗已无关闭按钮,点击浮窗外部区域关闭
+    await tester.tapAt(const Offset(20, 400));
     await tester.pumpAndSettle();
 
     expect(find.text('设置'), findsNothing);

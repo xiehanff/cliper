@@ -56,12 +56,23 @@ powershell -File .\make.ps1 package-windows
 make package-windows
 ```
 
+## 2.1 用 GitHub Actions 自动打包
+
+仓库已接入打包流水线 `.github/workflows/build-desktop-packages.yml`：
+
+- 每次 push 或手动触发（workflow_dispatch）时自动执行
+- Windows job：`flutter build windows --release` 后调用 `windows/installer/build_installer.ps1 -SkipBuild` 生成安装包
+- 产物上传为 artifact（名称 `cliper-windows-<run_number>`，保留 30 天），在仓库 Actions 页面下载
+- macOS job 同理生成 `cliper-<版本>.dmg`（artifact 名称 `cliper-macos-<run_number>`）
+
+本地已构建 Release 且只想重新打包时，CI 与本地使用的是同一套脚本，产物一致。
+
 ## 3. 安装包输出位置
 
 生成后的安装包在：
 
 ```text
-windows/installer/dist/CLIPER_Setup_1.1.3.exe
+windows/installer/dist/CLIPER_Setup_1.1.4.exe
 ```
 
 如果后面版本号变化，文件名会跟随 `pubspec.yaml` 的版本号更新。
@@ -81,7 +92,7 @@ windows/installer/dist/CLIPER_Setup_1.1.3.exe
 直接把这个文件发给用户：
 
 ```text
-CLIPER_Setup_1.1.3.exe
+CLIPER_Setup_1.1.4.exe
 ```
 
 附一句最小说明就够了：

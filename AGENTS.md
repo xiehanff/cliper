@@ -18,6 +18,8 @@ fvm flutter test
 fvm flutter build windows
 fvm flutter build macos
 fvm dart format lib test
+bash scripts/build_macos_dmg.sh --skip-build
+powershell -ExecutionPolicy Bypass -File windows/installer/build_installer.ps1 -SkipBuild
 ```
 
 ## 项目背景

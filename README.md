@@ -17,6 +17,10 @@ CLIPER lives in your system tray and pops up a floating panel when you need it. 
 5. **Organize** — create groups and drag items into collections to keep related content together.
 6. **Hide** — the panel hides automatically when you click away.
 
+## Download
+
+Installers are built automatically on every push by [GitHub Actions](https://github.com/xiehanff/cliper/actions/workflows/build-desktop-packages.yml) — grab the latest `CLIPER_Setup_<version>.exe` (Windows) or `cliper-<version>.dmg` (macOS) from the run artifacts. To build locally, see `docs/windows-installer-distribution.md` and `scripts/build_macos_dmg.sh`.
+
 ## Features
 
 - **Unified history** — text, links, images, and files in one chronological timeline.

@@ -58,6 +58,7 @@
 - [x] Windows debug/release 构建均通过。
 - [x] macOS Release 构建通过，已生成 `build/macos/CLIPER_1.1.3.dmg`。
 - [x] Windows 应用可启动并保持运行。
+- [x] GitHub Actions 打包流水线（2026-08-30）：push / 手动触发自动构建 Windows 安装包与 macOS DMG（`.github/workflows/build-desktop-packages.yml`、`scripts/build_macos_dmg.sh`），产物以 artifact 形式分发。
 
 ---
 

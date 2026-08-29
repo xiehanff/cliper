@@ -38,18 +38,13 @@ class SettingsPanelWidget extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  l10n.settings,
-                  style: TextStyle(
-                    color: theme.primaryText,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+            Text(
+              l10n.settings,
+              style: TextStyle(
+                color: theme.primaryText,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 16),
             Row(
@@ -85,25 +80,6 @@ class SettingsPanelWidget extends StatelessWidget {
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
               ],
-            ),
-            const SizedBox(height: 24),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: onClose,
-                style: TextButton.styleFrom(
-                  foregroundColor: theme.accent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                    side: BorderSide(color: theme.accent),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                ),
-                child: Text(l10n.close),
-              ),
             ),
           ],
         ),

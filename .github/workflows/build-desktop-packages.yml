@@ -1,0 +1,89 @@
+name: Build Desktop Packages
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FLUTTER_VERSION: '3.44.2'
+
+jobs:
+  windows:
+    name: Windows (.exe)
+    runs-on: windows-2022
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install Inno Setup
+        shell: powershell
+        run: choco install innosetup --no-progress -y
+
+      - name: Enable Windows desktop
+        run: flutter config --enable-windows-desktop
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build Windows release
+        run: flutter build windows --release
+
+      - name: Package Windows installer
+        shell: powershell
+        run: powershell -ExecutionPolicy Bypass -File .\windows\installer\build_installer.ps1 -SkipBuild
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: cliper-windows-${{ github.run_number }}
+          path: windows/installer/dist/*.exe
+          if-no-files-found: error
+          retention-days: 30
+
+  macos:
+    name: macOS (.dmg)
+    runs-on: macos-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Enable macOS desktop
+        run: flutter config --enable-macos-desktop
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build macOS release
+        run: flutter build macos --release
+
+      - name: Package DMG
+        run: bash scripts/build_macos_dmg.sh --skip-build
+
+      - name: Upload macOS package
+        uses: actions/upload-artifact@v4
+        with:
+          name: cliper-macos-${{ github.run_number }}
+          path: build/macos/release/*.dmg
+          if-no-files-found: error
+          retention-days: 30

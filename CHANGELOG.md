@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [1.1.4] - 2026-08-30
+
+### Added
+
+- GitHub Actions 打包流水线（`.github/workflows/build-desktop-packages.yml`）：push 或手动触发时自动构建 Windows Inno Setup 安装包与 macOS DMG，产物上传为 artifact（保留 30 天）
+- macOS DMG 打包脚本 `scripts/build_macos_dmg.sh`，支持 `--skip-build` 复用已有 Release 构建
+
+### Changed
+
+- 明亮模式条目卡片底色调暗（`#F9F9FB` → `#F2F2F5`），hover 色同步调整，并加强卡片阴影，提升与窗口背景的分离度
+- 设置浮窗移除底部「关闭」按钮，保留点击浮窗外区域与再次点击头部设置按钮两种关闭方式
+- 仓库不再跟踪历史安装包产物 `windows/installer/dist/CLIPER_Setup_1.0.0.exe`
+- 更新 README 与 docs 文档，补充 CI 打包与分发说明
+- 发布版本号更新为 `1.1.4`
+
 ## [1.1.3] - 2026-07-24
 
 ### Added

@@ -60,6 +60,8 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(context);
+    // 明亮模式卡片与背景都接近白色,阴影需比暗色模式强才有分离度。
+    final isLight = theme.brightness == Brightness.light;
 
     final card = MouseRegion(
       onEnter: (_) => setState(() => _hover = true),
@@ -83,8 +85,8 @@ class _ItemCardWidgetState extends State<ItemCardWidget> {
             border: Border.all(color: theme.borderColor),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: _hover ? 6 : 3,
+                color: Colors.black.withValues(alpha: isLight ? 0.10 : 0.04),
+                blurRadius: _hover ? (isLight ? 10 : 6) : (isLight ? 6 : 3),
                 offset: _hover ? const Offset(0, 2) : const Offset(0, 1),
               ),
             ],
