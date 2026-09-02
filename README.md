@@ -2,19 +2,19 @@
 
 ![CLIPER](cliper.png)
 
-Clipboard history manager for Windows and macOS. Never lose anything you copied — search, organize, and reuse with ease.
+Clipboard history manager for Windows and macOS. Never lose anything you copied — organize and reuse with ease.
 
 ## What is CLIPER?
 
-CLIPER lives in your system tray and pops up a floating panel when you need it. Everything you copy — text, links, images, files — is automatically recorded and instantly searchable.
+CLIPER lives in your system tray and pops up a floating panel when you need it. Everything you copy — text, links, JSON, images, files — is automatically recorded, ready to reuse.
 
 ## How to use
 
-1. **Install** — run the installer; CLIPER starts automatically.
-2. **Copy anything** — text, images, URLs, files. CLIPER saves them all.
-3. **Open the panel** — press the global shortcut (default: `Alt+Shift+V`).
-4. **Find and paste** — scroll through history or type to search. Double-click any item to copy it back.
-5. **Organize** — create groups and drag items into collections to keep related content together.
+1. **Install** — run the installer and launch CLIPER. Optionally turn on launch-at-startup in settings.
+2. **Copy anything** — text, links, images, files. CLIPER saves them all.
+3. **Open the panel** — press the global shortcut (default: `Ctrl+\` on Windows, `Cmd+\` on macOS).
+4. **Paste it back** — scroll through history. Double-click any item to copy it back and hide the panel.
+5. **Organize** — create color-coded groups and drag items into them to keep related content together.
 6. **Hide** — the panel hides automatically when you click away.
 
 ## Download
@@ -23,10 +23,12 @@ Prebuilt installers are published on the [Releases](https://github.com/xiehanff/
 
 ## Features
 
-- **Unified history** — text, links, images, and files in one chronological timeline.
-- **Instant search** — filter across all content types as you type.
-- **Custom groups** — create, rename, reorder, and color-code groups. Drag items between groups.
+- **Unified history** — text, links, JSON, images, and files in one chronological timeline.
+- **Custom groups** — create, rename, and color-code groups. Drag items between groups.
 - **Global shortcut** — customizable hotkey to show/hide the panel.
+- **Smart activation** — double-click an item to copy it back; it jumps to the top of your history.
+- **Multi-display aware** — the panel appears on the display your cursor is on.
+- **Launch at startup** — optional, off by default.
 - **Dark & light themes** — switch anytime.
 - **Multi-language** — English and Chinese (中文).
 - **Lightweight** — runs in the system tray. No window chrome, no taskbar entry.
@@ -34,6 +36,4 @@ Prebuilt installers are published on the [Releases](https://github.com/xiehanff/
 
 ---
 
-[**中文版**](#)
-
-*CLIPER. Copy. Find. Paste.*
+*CLIPER. Copy. Organize. Paste.*
