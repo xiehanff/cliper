@@ -42,6 +42,22 @@ class HtmlTextConverter {
     String? suppressedTag;
 
     while (index < fragment.length) {
+      if (suppressedTag != null) {
+        final closingStart = _findClosingTagStart(
+          fragment,
+          index,
+          suppressedTag,
+        );
+        if (closingStart == -1) break;
+
+        final closingEnd = _findTagEnd(fragment, closingStart + 1);
+        if (closingEnd == -1) break;
+
+        suppressedTag = null;
+        index = closingEnd + 1;
+        continue;
+      }
+
       if (fragment.startsWith('<!--', index)) {
         final commentEnd = fragment.indexOf('-->', index + 4);
         if (commentEnd == -1) break;
@@ -52,25 +68,18 @@ class HtmlTextConverter {
       if (fragment.codeUnitAt(index) == 0x3C) {
         final tagEnd = _findTagEnd(fragment, index + 1);
         if (tagEnd == -1) {
-          if (suppressedTag == null) {
-            if (pendingBlockBreak) {
-              output.writeBlockLineBreak();
-              pendingBlockBreak = false;
-            }
-            output.write('<');
+          if (pendingBlockBreak) {
+            output.writeBlockLineBreak();
+            pendingBlockBreak = false;
           }
+          output.write('<');
           index++;
           continue;
         }
 
         final tag = _parseTag(fragment.substring(index + 1, tagEnd));
         if (tag != null) {
-          if (suppressedTag != null) {
-            if (tag.isClosing && tag.name == suppressedTag) {
-              suppressedTag = null;
-            }
-          } else if (!tag.isClosing &&
-              (tag.name == 'script' || tag.name == 'style')) {
+          if (!tag.isClosing && (tag.name == 'script' || tag.name == 'style')) {
             suppressedTag = tag.name;
           } else if (tag.name == 'br') {
             if (pendingBlockBreak) {
@@ -90,7 +99,7 @@ class HtmlTextConverter {
       final nextTag = fragment.indexOf('<', index);
       final textEnd = nextTag == -1 ? fragment.length : nextTag;
       final text = fragment.substring(index, textEnd);
-      if (suppressedTag == null && text.isNotEmpty) {
+      if (text.isNotEmpty) {
         // Formatting whitespace between adjacent block elements belongs to the
         // HTML wrapper, not the copied text. Keep the pending semantic break
         // instead of turning it into an extra blank line.
@@ -116,9 +125,20 @@ class HtmlTextConverter {
     final start = _startFragmentPattern.firstMatch(html);
     if (start == null) return html;
 
-    final end = _endFragmentPattern.firstMatch(html, start.end);
-    if (end == null || end.start < start.end) return html;
+    final endMatches = _endFragmentPattern.allMatches(html, start.end);
+    if (endMatches.isEmpty) return html;
+
+    final end = endMatches.first;
     return html.substring(start.end, end.start);
+  }
+
+  static int _findClosingTagStart(String html, int start, String tagName) {
+    final pattern = RegExp(
+      '</\\s*${RegExp.escape(tagName)}\\b',
+      caseSensitive: false,
+    );
+    final match = pattern.firstMatch(html.substring(start));
+    return match == null ? -1 : start + match.start;
   }
 
   static int _findTagEnd(String html, int start) {
