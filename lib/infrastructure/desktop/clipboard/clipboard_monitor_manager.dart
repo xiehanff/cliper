@@ -9,12 +9,19 @@ import 'package:super_clipboard/super_clipboard.dart';
 import '../../../application/controllers/app_controller.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/content_type_detector.dart';
+import '../../../core/utils/html_text_converter.dart';
 import '../../../core/utils/id_generator.dart';
 import '../../../domain/entities/clipboard_item.dart';
 import '../../../domain/enums/clipboard_item_type.dart';
 import '../platform/platform_clipboard.dart';
 
 class ClipboardMonitorManager with ClipboardListener {
+  static const _readRetryDelays = <Duration>[
+    Duration.zero,
+    Duration(milliseconds: 25),
+    Duration(milliseconds: 75),
+  ];
+
   final AppController _appController;
   final AppLogger _logger;
   final IdGenerator _idGenerator;
@@ -53,14 +60,34 @@ class ClipboardMonitorManager with ClipboardListener {
   }
 
   Future<void> _handleClipboardChange() async {
-    try {
-      final item = await _readClipboardItem();
-      if (item != null) {
-        _appController.addClipboardItem(item);
+    Object? lastError;
+    StackTrace? lastStackTrace;
+
+    for (final delay in _readRetryDelays) {
+      if (delay != Duration.zero) {
+        await Future<void>.delayed(delay);
       }
-    } catch (e, stack) {
-      _logger.error('Failed to handle clipboard change',
-          error: e, stackTrace: stack);
+
+      try {
+        final item = await _readClipboardItem();
+        if (item != null) {
+          _appController.addClipboardItem(item);
+          return;
+        }
+      } catch (e, stack) {
+        lastError = e;
+        lastStackTrace = stack;
+      }
+    }
+
+    if (lastError != null) {
+      _logger.error(
+        'Failed to handle clipboard change after retries',
+        error: lastError,
+        stackTrace: lastStackTrace,
+      );
+    } else {
+      _logger.debug('Clipboard change had no supported content');
     }
   }
 
@@ -129,8 +156,23 @@ class ClipboardMonitorManager with ClipboardListener {
   }
 
   Future<String?> _readText(ClipboardReader reader) async {
-    if (!reader.canProvide(Formats.plainText)) return null;
-    return reader.readValue(Formats.plainText);
+    if (reader.canProvide(Formats.plainText)) {
+      final text = await reader.readValue(Formats.plainText);
+      if (text != null && text.isNotEmpty) return text;
+    }
+
+    // Some browser copy buttons publish only an HTML clipboard flavor. The
+    // system can still paste it into rich-text targets, but a plainText-only
+    // reader would silently miss the copy event.
+    if (reader.canProvide(Formats.htmlText)) {
+      final html = await reader.readValue(Formats.htmlText);
+      if (html != null && html.isNotEmpty) {
+        final text = HtmlTextConverter.toPlainText(html);
+        if (text.isNotEmpty) return text;
+      }
+    }
+
+    return null;
   }
 
   Future<String?> _readImage(ClipboardReader reader) async {
