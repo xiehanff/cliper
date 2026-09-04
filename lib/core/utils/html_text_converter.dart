@@ -68,11 +68,13 @@ class HtmlTextConverter {
 
     const namedEntities = <String, String>{
       '&nbsp;': ' ',
-      '&amp;': '&',
       '&lt;': '<',
       '&gt;': '>',
       '&quot;': '"',
       '&apos;': "'",
+      // Decode ampersand last so "&amp;lt;" stays the literal text "&lt;"
+      // instead of being decoded twice into "<".
+      '&amp;': '&',
     };
     for (final entry in namedEntities.entries) {
       decoded = decoded.replaceAll(entry.key, entry.value);
