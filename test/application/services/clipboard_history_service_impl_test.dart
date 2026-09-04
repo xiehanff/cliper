@@ -73,6 +73,23 @@ void main() {
       expect(store.realtime.length, 1);
     });
 
+    test('duplicate copy moves existing item to top and refreshes timestamp', () {
+      var store = service.addItem(
+        const ClipboardStore(),
+        textItem('first', timestamp: 1000),
+      );
+      final firstId = store.realtime.first.id;
+      store = service.addItem(store, textItem('second', timestamp: 2000));
+
+      store = service.addItem(store, textItem('first', timestamp: 3000));
+
+      expect(store.realtime.length, 2);
+      expect(store.realtime.first.id, firstId);
+      expect(store.realtime.first.text, 'first');
+      expect(store.realtime.first.timestamp, 3000);
+      expect(store.realtime.last.text, 'second');
+    });
+
     test('image duplicate is not inserted', () {
       var store = service.addItem(
         const ClipboardStore(),

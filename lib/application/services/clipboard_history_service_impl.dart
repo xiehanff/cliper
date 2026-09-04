@@ -16,11 +16,22 @@ class ClipboardHistoryServiceImpl implements ClipboardHistoryService {
 
   @override
   ClipboardStore addItem(ClipboardStore store, ClipboardItem item) {
-    final duplicate = store.realtime.firstWhere(
+    final duplicateIndex = store.realtime.indexWhere(
       (it) => it.type == item.type && it.contentKey == item.contentKey,
-      orElse: () => ClipboardItem(id: '', type: item.type, timestamp: 0),
     );
-    if (duplicate.id.isNotEmpty) return store;
+    if (duplicateIndex >= 0) {
+      final existing = store.realtime[duplicateIndex];
+      final refreshed = item.copyWith(
+        id: existing.id,
+        timestamp: item.timestamp == 0 ? _clock() : item.timestamp,
+      );
+      final realtime = [
+        refreshed,
+        ...store.realtime.sublist(0, duplicateIndex),
+        ...store.realtime.sublist(duplicateIndex + 1),
+      ];
+      return store.copyWith(realtime: realtime);
+    }
 
     final newItem = item.copyWith(
       id: item.id.isEmpty ? _idGenerator.generate() : item.id,

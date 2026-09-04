@@ -13,27 +13,42 @@ import '../../../core/utils/id_generator.dart';
 import '../../../domain/entities/clipboard_item.dart';
 import '../../../domain/enums/clipboard_item_type.dart';
 import '../platform/platform_clipboard.dart';
+import 'clipboard_text_reader.dart';
 
 class ClipboardMonitorManager with ClipboardListener {
+  static const _defaultReadRetryDelays = <Duration>[
+    Duration.zero,
+    Duration(milliseconds: 25),
+    Duration(milliseconds: 75),
+  ];
+
   final AppController _appController;
   final AppLogger _logger;
   final IdGenerator _idGenerator;
   final int Function() _clock;
+  final Future<ClipboardReader?> Function()? _clipboardReaderProvider;
+  final List<Duration> _readRetryDelays;
   bool _started = false;
+  int _generation = 0;
 
   ClipboardMonitorManager({
     required AppController appController,
     required AppLogger logger,
     required IdGenerator idGenerator,
     required int Function() clock,
+    Future<ClipboardReader?> Function()? clipboardReaderProvider,
+    List<Duration>? readRetryDelays,
   })  : _appController = appController,
         _logger = logger,
         _idGenerator = idGenerator,
-        _clock = clock;
+        _clock = clock,
+        _clipboardReaderProvider = clipboardReaderProvider,
+        _readRetryDelays = readRetryDelays ?? _defaultReadRetryDelays;
 
   void start() {
     if (_started) return;
     _started = true;
+    _generation++;
     clipboardWatcher.addListener(this);
     clipboardWatcher.start();
     _logger.info('Clipboard monitor started');
@@ -42,6 +57,7 @@ class ClipboardMonitorManager with ClipboardListener {
   void stop() {
     if (!_started) return;
     _started = false;
+    _generation++;
     clipboardWatcher.removeListener(this);
     clipboardWatcher.stop();
     _logger.info('Clipboard monitor stopped');
@@ -49,36 +65,54 @@ class ClipboardMonitorManager with ClipboardListener {
 
   @override
   void onClipboardChanged() {
-    _handleClipboardChange();
+    _handleClipboardChange(_generation);
   }
 
-  Future<void> _handleClipboardChange() async {
-    try {
-      final item = await _readClipboardItem();
-      if (item != null) {
-        _appController.addClipboardItem(item);
+  Future<void> _handleClipboardChange(int generation) async {
+    Object? lastError;
+    StackTrace? lastStackTrace;
+
+    for (final delay in _readRetryDelays) {
+      if (delay != Duration.zero) {
+        await Future<void>.delayed(delay);
       }
-    } catch (e, stack) {
-      _logger.error('Failed to handle clipboard change',
-          error: e, stackTrace: stack);
+      if (generation != _generation) return;
+
+      try {
+        final item = await _readClipboardItem();
+        if (generation != _generation) return;
+        if (item != null) {
+          _appController.addClipboardItem(item);
+          return;
+        }
+      } catch (e, stack) {
+        lastError = e;
+        lastStackTrace = stack;
+      }
+    }
+
+    if (generation != _generation) return;
+    if (lastError != null) {
+      _logger.error(
+        'Failed to handle clipboard change after retries',
+        error: lastError,
+        stackTrace: lastStackTrace,
+      );
+    } else {
+      _logger.debug('Clipboard change had no supported content');
     }
   }
 
   Future<ClipboardItem?> _readClipboardItem() async {
-    final clipboard = SystemClipboard.instance;
-    if (clipboard == null) {
-      _logger.warning('System clipboard is not available');
-      return null;
-    }
-
-    final reader = await clipboard.read();
+    final reader = await _readClipboard();
+    if (reader == null) return null;
 
     final files = await _readFiles(reader);
     if (files.isNotEmpty) {
       return _createItem(ClipboardItemType.file, files: files);
     }
 
-    final text = await _readText(reader);
+    final text = await ClipboardTextReader.read(reader);
     if (text != null && text.isNotEmpty) {
       final subType = ContentTypeDetector.detect(text);
       return _createItem(subType, text: text);
@@ -90,6 +124,18 @@ class ClipboardMonitorManager with ClipboardListener {
     }
 
     return null;
+  }
+
+  Future<ClipboardReader?> _readClipboard() async {
+    final provider = _clipboardReaderProvider;
+    if (provider != null) return provider();
+
+    final clipboard = SystemClipboard.instance;
+    if (clipboard == null) {
+      _logger.warning('System clipboard is not available');
+      return null;
+    }
+    return clipboard.read();
   }
 
   Future<List<String>> _readFiles(ClipboardReader reader) async {
@@ -105,7 +151,9 @@ class ClipboardMonitorManager with ClipboardListener {
 
     if (paths.isNotEmpty) return paths;
 
-    if (Platform.isWindows) {
+    // A custom reader provider is only used by tests. Keep those reads fully
+    // isolated from the Windows MethodChannel file-list fallback.
+    if (Platform.isWindows && _clipboardReaderProvider == null) {
       final fallbackPaths = await PlatformClipboard.getFilePaths();
       if (fallbackPaths.isNotEmpty) return fallbackPaths;
     }
@@ -126,11 +174,6 @@ class ClipboardMonitorManager with ClipboardListener {
     } catch (e) {
       return uri.toString();
     }
-  }
-
-  Future<String?> _readText(ClipboardReader reader) async {
-    if (!reader.canProvide(Formats.plainText)) return null;
-    return reader.readValue(Formats.plainText);
   }
 
   Future<String?> _readImage(ClipboardReader reader) async {
