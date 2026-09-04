@@ -35,6 +35,20 @@ StartHTML:00000097
       expect(HtmlTextConverter.toPlainText(html), 'visible');
     });
 
+    test('ignores less-than signs inside suppressed script content', () {
+      const html =
+          '<script>if (a < b) { console.log(a); }</script><div>visible</div>';
+
+      expect(HtmlTextConverter.toPlainText(html), 'visible');
+    });
+
+    test('ignores less-than signs inside suppressed style content', () {
+      const html =
+          '<style>.x::before { content: "a < b"; }</style><div>visible</div>';
+
+      expect(HtmlTextConverter.toPlainText(html), 'visible');
+    });
+
     test('preserves significant leading and trailing whitespace', () {
       const html = '<pre>  indented  </pre>';
 
