@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [1.1.6] - 2026-09-04
+
+### Fixed
+
+- 修复部分网页“复制”按钮写入剪切板后可以正常粘贴，但 Cliper 未生成历史记录的问题：文本读取现在优先使用 plain text，缺失或为空时回退到 HTML clipboard，并安全转换为纯文本
+- 剪切板变化后增加短延迟重试，降低系统剪切板格式尚未就绪时的漏记概率；同时加入 generation guard，避免 stop/restart 后旧重试继续写入历史
+- 修复重复复制已有历史项时界面无变化的问题：重复内容保持单条记录，但会刷新时间并移动到列表顶部
+- 修复持久化进行中后续保存请求被直接丢弃的问题，改为 dirty + drain queue，确保连续复制后的最新状态最终落盘
+- 加固 HTML clipboard 文本转换：保留有效首尾空白与显式换行，正确处理 quoted attribute 中的 `>`、CF_HTML fragment、script/style 以及其中的 `<`
+
+### Changed
+
+- 新增 HTML-only clipboard、monitor retry、重复项刷新和 in-flight persistence 回归测试
+- 发布版本号更新为 `1.1.6`
+
 ## [1.1.5] - 2026-08-30
 
 ### Changed
