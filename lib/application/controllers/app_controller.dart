@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -28,7 +30,8 @@ class AppController extends ChangeNotifier {
   // -- State --
   ClipboardStore _store = const ClipboardStore();
   String? _currentGroupId;
-  bool _persistPending = false;
+  bool _persistInProgress = false;
+  bool _persistDirty = false;
 
   AppController({
     required StoreRepository storeRepository,
@@ -270,14 +273,28 @@ class AppController extends ChangeNotifier {
 
   // -- Persistence --
   void _persist() {
-    if (_persistPending) return;
-    _persistPending = true;
-    _saveStore().then((_) => _persistPending = false);
+    _persistDirty = true;
+    if (_persistInProgress) return;
+
+    _persistInProgress = true;
+    unawaited(_drainPersistQueue());
+  }
+
+  Future<void> _drainPersistQueue() async {
+    try {
+      while (_persistDirty) {
+        _persistDirty = false;
+        await _saveStore();
+      }
+    } finally {
+      _persistInProgress = false;
+      if (_persistDirty) _persist();
+    }
   }
 
   @override
   void dispose() {
-    _persistPending = false;
+    _persistDirty = false;
     super.dispose();
   }
 
