@@ -151,7 +151,9 @@ class ClipboardMonitorManager with ClipboardListener {
 
     if (paths.isNotEmpty) return paths;
 
-    if (Platform.isWindows) {
+    // A custom reader provider is only used by tests. Keep those reads fully
+    // isolated from the Windows MethodChannel file-list fallback.
+    if (Platform.isWindows && _clipboardReaderProvider == null) {
       final fallbackPaths = await PlatformClipboard.getFilePaths();
       if (fallbackPaths.isNotEmpty) return fallbackPaths;
     }
