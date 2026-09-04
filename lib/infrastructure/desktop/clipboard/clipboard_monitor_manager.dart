@@ -9,11 +9,11 @@ import 'package:super_clipboard/super_clipboard.dart';
 import '../../../application/controllers/app_controller.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/content_type_detector.dart';
-import '../../../core/utils/html_text_converter.dart';
 import '../../../core/utils/id_generator.dart';
 import '../../../domain/entities/clipboard_item.dart';
 import '../../../domain/enums/clipboard_item_type.dart';
 import '../platform/platform_clipboard.dart';
+import 'clipboard_text_reader.dart';
 
 class ClipboardMonitorManager with ClipboardListener {
   static const _readRetryDelays = <Duration>[
@@ -105,7 +105,7 @@ class ClipboardMonitorManager with ClipboardListener {
       return _createItem(ClipboardItemType.file, files: files);
     }
 
-    final text = await _readText(reader);
+    final text = await ClipboardTextReader.read(reader);
     if (text != null && text.isNotEmpty) {
       final subType = ContentTypeDetector.detect(text);
       return _createItem(subType, text: text);
@@ -153,26 +153,6 @@ class ClipboardMonitorManager with ClipboardListener {
     } catch (e) {
       return uri.toString();
     }
-  }
-
-  Future<String?> _readText(ClipboardReader reader) async {
-    if (reader.canProvide(Formats.plainText)) {
-      final text = await reader.readValue(Formats.plainText);
-      if (text != null && text.isNotEmpty) return text;
-    }
-
-    // Some browser copy buttons publish only an HTML clipboard flavor. The
-    // system can still paste it into rich-text targets, but a plainText-only
-    // reader would silently miss the copy event.
-    if (reader.canProvide(Formats.htmlText)) {
-      final html = await reader.readValue(Formats.htmlText);
-      if (html != null && html.isNotEmpty) {
-        final text = HtmlTextConverter.toPlainText(html);
-        if (text.isNotEmpty) return text;
-      }
-    }
-
-    return null;
   }
 
   Future<String?> _readImage(ClipboardReader reader) async {
