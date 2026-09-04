@@ -70,26 +70,21 @@ void main() {
 }
 
 class _FakeClipboardReader extends ClipboardReader {
-  _FakeClipboardReader({this.plainText, this.htmlText}) : super(const []);
+  _FakeClipboardReader({this.htmlText}) : super(const []);
 
-  final String? plainText;
   final String? htmlText;
 
   @override
   bool canProvide(DataFormat format) {
-    if (identical(format, Formats.plainText)) return plainText != null;
     if (identical(format, Formats.htmlText)) return htmlText != null;
     return false;
   }
 
   @override
   Future<T?> readValue<T extends Object>(ValueFormat<T> format) async {
-    Object? value;
-    if (identical(format, Formats.plainText)) {
-      value = plainText;
-    } else if (identical(format, Formats.htmlText)) {
-      value = htmlText;
+    if (identical(format, Formats.htmlText)) {
+      return htmlText as T?;
     }
-    return value as T?;
+    return null;
   }
 }
