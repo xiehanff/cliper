@@ -54,7 +54,7 @@ class HtmlTextConverter {
         if (tagEnd == -1) {
           if (suppressedTag == null) {
             if (pendingBlockBreak) {
-              output.writeLineBreak();
+              output.writeBlockLineBreak();
               pendingBlockBreak = false;
             }
             output.write('<');
@@ -73,8 +73,11 @@ class HtmlTextConverter {
               (tag.name == 'script' || tag.name == 'style')) {
             suppressedTag = tag.name;
           } else if (tag.name == 'br') {
-            if (pendingBlockBreak) pendingBlockBreak = false;
-            output.writeLineBreak();
+            if (pendingBlockBreak) {
+              output.writeBlockLineBreak();
+              pendingBlockBreak = false;
+            }
+            output.writeExplicitLineBreak();
           } else if (tag.isClosing && _blockTags.contains(tag.name)) {
             pendingBlockBreak = true;
           }
@@ -96,7 +99,7 @@ class HtmlTextConverter {
           continue;
         }
         if (pendingBlockBreak) {
-          output.writeLineBreak();
+          output.writeBlockLineBreak();
           pendingBlockBreak = false;
         }
         output.write(text);
@@ -219,9 +222,15 @@ class _TextBuilder {
     _endsWithLineBreak = value.endsWith('\n') || value.endsWith('\r');
   }
 
-  void writeLineBreak() {
+  void writeBlockLineBreak() {
     if (_isEmpty || _endsWithLineBreak) return;
     _buffer.write('\n');
+    _endsWithLineBreak = true;
+  }
+
+  void writeExplicitLineBreak() {
+    _buffer.write('\n');
+    _isEmpty = false;
     _endsWithLineBreak = true;
   }
 
