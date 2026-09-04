@@ -58,5 +58,11 @@ StartHTML:00000097
 
       expect(HtmlTextConverter.toPlainText(html), 'first\nsecond');
     });
+
+    test('preserves consecutive explicit line breaks', () {
+      const html = 'first<br><br>third';
+
+      expect(HtmlTextConverter.toPlainText(html), 'first\n\nthird');
+    });
   });
 }
