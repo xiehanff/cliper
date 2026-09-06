@@ -109,3 +109,47 @@ Linux 下：
 1. 不要把本分支的 Linux 行为回灌到 Windows/macOS 主线分支。
 2. Linux 下当前不支持通过全局快捷键呼出窗口，这是刻意策略变更，不是 bug。
 3. 若后续需要恢复 Linux 全局快捷键，应单独评估 GNOME / Wayland 可用性，而不是直接复用 Windows/macOS 策略。
+
+## 8. 分支独立 CI 与发版规则
+
+本分支拥有独立于 master 的 CI：`.github/workflows/build-linux-packages.yml`。
+
+### 8.1 与 master workflow 的隔离机制
+
+1. master 的 `build-desktop-packages.yml` 负责 Windows/macOS，触发 tag 前缀为 `v*`。
+2. 本分支的 `build-linux-packages.yml` 负责 Linux（deb + rpm），触发 tag 前缀为 `linux-v*`（如 `linux-v1.1.6`）。
+3. GitHub Actions 以 tag 所指向提交内的 workflow 文件为准：
+   - `v*` tag 打在 master 提交上 → 只有 master 的 workflow 存在，不会构建 Linux 包。
+   - `linux-v*` tag 打在本分支提交上 → 只有本分支的 workflow 匹配前缀，master 的 `v*` 规则不会命中。
+4. 因此**严禁在本分支上打 `v*` 前缀的 tag**：本分支提交里同时存在 master 继承的 workflow 文件，会意外触发 Windows/macOS 构建与发版。
+
+### 8.2 workflow_dispatch 不可用（GitHub 硬限制）
+
+分支独有的 workflow（未出现在仓库默认分支 master 上）无法通过 `workflow_dispatch` 触发：
+
+- `gh workflow run build-linux-packages.yml --ref linux/wayland` 会返回 404；
+- 直接调用 dispatch API 同样 404；
+- 这是 GitHub 的平台限制，不是配置问题。
+
+结论：本分支的 CI 只能通过 tag 推送触发，UI/CLI 手动触发入口对本分支无效。
+
+### 8.3 发版流程
+
+```bash
+git tag linux-v<版本号>          # 版本号取 pubspec.yaml 的 version 主版本，如 linux-v1.1.6
+git push origin linux-v<版本号>
+```
+
+CI 自动完成：
+
+1. ubuntu-latest 构建 `flutter build linux --release`；
+2. `scripts/build_linux_deb.sh --skip-build` 与 `scripts/build_linux_rpm.sh --skip-build` 打包；
+3. 产物上传 artifact（`cliper-linux-<run_number>`）；
+4. 创建 GitHub Release（标题 `CLIPER Linux <版本号>`），从 `CHANGELOG.md` 的 `## [<版本号>]` 小节提取说明，资产为 `.deb` 与 `.rpm`。
+
+### 8.4 已验证项
+
+1. `linux-v0.0.0-ci` 测试 tag 全链路通过（构建 3m25s + 发版 8s）。
+2. Release 资产：`cliper-1.1.6-1.x86_64.rpm` 与 `cliper_1.1.6+1_amd64.deb`。
+3. deb 打包脚本在 Ubuntu 环境验证通过（本机 Fedora 仅能验证 rpm）。
+4. 测试 tag 与 Release 已删除，不影响正式发版。
