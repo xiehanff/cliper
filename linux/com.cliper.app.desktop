@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=CLIPER
+Comment=Clipboard history manager
+Exec=cliper
+Icon=com.cliper.app
+Terminal=false
+Categories=Utility;
+StartupNotify=true
+StartupWMClass=com.cliper.app
+X-GNOME-WMClass=com.cliper.app

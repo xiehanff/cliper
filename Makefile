@@ -1,4 +1,4 @@
-.PHONY: get clean analyze run-windows build-windows build-installer-windows package-windows
+.PHONY: get clean analyze run-windows build-windows build-installer-windows package-windows package-deb package-rpm
 
 FLUTTER := fvm flutter
 
@@ -22,3 +22,9 @@ build-installer-windows:
 
 package-windows:
 	powershell -ExecutionPolicy Bypass -File .\windows\installer\build_installer.ps1
+
+package-deb:
+	bash scripts/build_linux_deb.sh
+
+package-rpm:
+	bash scripts/build_linux_rpm.sh

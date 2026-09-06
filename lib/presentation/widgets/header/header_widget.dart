@@ -123,7 +123,7 @@ class _HeaderWidgetState extends State<HeaderWidget> with WindowListener {
     final theme = AppTheme.of(context);
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
       decoration: BoxDecoration(
         color: theme.brightness == Brightness.dark
             ? const Color(0xFF000000)
@@ -365,8 +365,8 @@ class _WindowButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 42,
-      height: 50,
+      width: 40,
+      height: 34,
       child: IconButton(
         tooltip: tooltip,
         padding: EdgeInsets.zero,

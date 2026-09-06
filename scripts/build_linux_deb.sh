@@ -1,97 +1,81 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-PACKAGE_NAME="cliper"
-APP_ID="com.cliper.app"
-INSTALL_DIR="/opt/${PACKAGE_NAME}"
-OUTPUT_DIR="${ROOT_DIR}/dist"
-BUILD_ROOT="${ROOT_DIR}/build/linux/deb"
-STAGING_DIR="${BUILD_ROOT}/pkg"
-CONTROL_DIR="${STAGING_DIR}/DEBIAN"
-BUNDLE_DIR="${ROOT_DIR}/build/linux/x64/release/bundle"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(cd "$script_dir/.." && pwd)"
+skip_build=false
 
-version_line="$(grep '^version:' "${ROOT_DIR}/pubspec.yaml")"
-version_value="${version_line#version: }"
-package_version="${version_value%%+*}"
-package_revision="${version_value##*+}"
-if [[ "${package_revision}" == "${version_value}" ]]; then
-  package_revision="1"
+if [[ "${1:-}" == "--skip-build" ]]; then
+  skip_build=true
 fi
 
-deb_file="${OUTPUT_DIR}/${PACKAGE_NAME}_${package_version}-${package_revision}_amd64.deb"
+full_version="$(sed -n 's/^version:[[:space:]]*//p' "$repo_root/pubspec.yaml" | head -n 1)"
+if [[ -z "$full_version" ]]; then
+  printf 'Missing version in pubspec.yaml\n' >&2
+  exit 1
+fi
 
-rm -rf "${STAGING_DIR}"
-mkdir -p \
-  "${CONTROL_DIR}" \
-  "${STAGING_DIR}${INSTALL_DIR}" \
-  "${STAGING_DIR}/usr/bin" \
-  "${STAGING_DIR}/usr/share/applications" \
-  "${STAGING_DIR}/usr/share/icons/hicolor/256x256/apps"
+bundle_dir="$repo_root/build/linux/x64/release/bundle"
+deb_output_dir="$repo_root/build/linux/x64/release"
+deb_artifact="$deb_output_dir/cliper_${full_version}_amd64.deb"
 
-fvm flutter build linux --release
+if [[ "$skip_build" == false ]]; then
+  fvm flutter build linux --release
+fi
 
-cp -R "${BUNDLE_DIR}/." "${STAGING_DIR}${INSTALL_DIR}/"
-cp "${ROOT_DIR}/assets/icon.png" \
-  "${STAGING_DIR}/usr/share/icons/hicolor/256x256/apps/${APP_ID}.png"
-ln -s "${INSTALL_DIR}/${PACKAGE_NAME}" "${STAGING_DIR}/usr/bin/${PACKAGE_NAME}"
+if [[ ! -x "$bundle_dir/cliper" ]]; then
+  printf 'Linux release bundle not found: %s\n' "$bundle_dir" >&2
+  printf 'Run fvm flutter build linux --release first.\n' >&2
+  exit 1
+fi
 
-cat > "${CONTROL_DIR}/control" <<EOF
-Package: ${PACKAGE_NAME}
-Version: ${package_version}-${package_revision}
+if ! command -v dpkg-deb >/dev/null 2>&1; then
+  printf 'dpkg-deb is required to build the Debian package\n' >&2
+  exit 1
+fi
+
+pkg_root="$(mktemp -d)"
+trap 'rm -rf "$pkg_root"' EXIT
+
+install -d \
+  "$pkg_root/DEBIAN" \
+  "$pkg_root/opt" \
+  "$pkg_root/usr/share/applications" \
+  "$pkg_root/usr/share/icons"
+
+cp -a "$bundle_dir" "$pkg_root/opt/cliper"
+rm -rf "$pkg_root/opt/cliper/share"
+cp -a "$repo_root/linux/icons/hicolor" "$pkg_root/usr/share/icons/"
+sed 's|^Exec=cliper$|Exec=/opt/cliper/cliper|' \
+  "$repo_root/linux/com.cliper.app.desktop" > \
+  "$pkg_root/usr/share/applications/com.cliper.app.desktop"
+
+cat > "$pkg_root/DEBIAN/control" <<EOF
+Package: cliper
+Version: $full_version
 Section: utils
 Priority: optional
 Architecture: amd64
-Maintainer: CLIPER
-Depends: libgtk-3-0, libkeybinder-3.0-0
+Maintainer: xiehan <noreply@example.com>
+Depends: libc6, libgtk-3-0, libglib2.0-0, libstdc++6
 Description: CLIPER clipboard history manager
- Desktop clipboard history manager for Linux Wayland/GNOME.
+ A Flutter clipboard history manager packaged for Linux.
 EOF
 
-cat > "${STAGING_DIR}/usr/share/applications/${APP_ID}.desktop" <<EOF
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=CLIPER
-Comment=Clipboard history manager
-Exec=/usr/bin/${PACKAGE_NAME}
-Icon=${APP_ID}
-Terminal=false
-Categories=Utility;
-StartupNotify=true
-StartupWMClass=${APP_ID}
-X-GNOME-WMClass=${APP_ID}
-EOF
-
-cat > "${CONTROL_DIR}/postinst" <<'EOF'
-#!/usr/bin/env bash
+cat > "$pkg_root/DEBIAN/postinst" <<'EOF'
+#!/bin/sh
 set -e
-
-if command -v update-desktop-database >/dev/null 2>&1; then
-  update-desktop-database /usr/share/applications || true
-fi
-
 if command -v gtk-update-icon-cache >/dev/null 2>&1; then
-  gtk-update-icon-cache -f /usr/share/icons/hicolor >/dev/null 2>&1 || true
+  gtk-update-icon-cache -f /usr/share/icons/hicolor/ || true
 fi
-EOF
-
-cat > "${CONTROL_DIR}/postrm" <<'EOF'
-#!/usr/bin/env bash
-set -e
-
 if command -v update-desktop-database >/dev/null 2>&1; then
-  update-desktop-database /usr/share/applications || true
+  update-desktop-database /usr/share/applications/ || true
 fi
-
-if command -v gtk-update-icon-cache >/dev/null 2>&1; then
-  gtk-update-icon-cache -f /usr/share/icons/hicolor >/dev/null 2>&1 || true
-fi
+chmod +x /opt/cliper/cliper
+exit 0
 EOF
+chmod 755 "$pkg_root/DEBIAN/postinst"
 
-chmod 0755 "${CONTROL_DIR}/postinst" "${CONTROL_DIR}/postrm"
-
-mkdir -p "${OUTPUT_DIR}"
-dpkg-deb --build --root-owner-group "${STAGING_DIR}" "${deb_file}"
-
-printf 'Built %s\n' "${deb_file}"
+mkdir -p "$deb_output_dir"
+dpkg-deb --build --root-owner-group "$pkg_root" "$deb_artifact"
+printf 'DEB release package: %s\n' "$deb_artifact"

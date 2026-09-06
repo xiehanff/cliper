@@ -19,9 +19,10 @@ gchar* get_icon_path() {
     return nullptr;
   }
 
+  // The 256px icon is installed to <exe_dir>/data/app_icon_256.png by CMake
+  // (see linux/CMakeLists.txt), mirroring the plume-pdf runner.
   g_autofree gchar* executable_dir = g_path_get_dirname(executable_path);
-  return g_build_filename(executable_dir, "data", "flutter_assets", "assets",
-                          "icon.png", nullptr);
+  return g_build_filename(executable_dir, "data", "app_icon_256.png", nullptr);
 }
 
 void ensure_icon_theme_entry() {
@@ -52,13 +53,16 @@ void ensure_icon_theme_entry() {
   }
 }
 
-void write_desktop_entry(const gchar* desktop_id, const gchar* icon_name,
+void write_desktop_entry(const gchar* desktop_id, const gchar* icon_spec,
                          const gchar* startup_wm_class,
                          const gchar* executable_path,
                          const gchar* applications_dir) {
   g_autofree gchar* desktop_file_name = g_strconcat(desktop_id, ".desktop", nullptr);
   g_autofree gchar* desktop_file_path =
       g_build_filename(applications_dir, desktop_file_name, nullptr);
+  // icon_spec is an absolute path in dev mode (bypasses icon-theme cache
+  // lookups, which GNOME Shell may not refresh for user-local entries) and
+  // the plain application id for system-installed packages.
   g_autofree gchar* desktop_entry = g_strdup_printf(
       "[Desktop Entry]\n"
       "Version=1.0\n"
@@ -72,19 +76,18 @@ void write_desktop_entry(const gchar* desktop_id, const gchar* icon_name,
       "StartupNotify=true\n"
       "StartupWMClass=%s\n"
       "X-GNOME-WMClass=%s\n",
-      executable_path, icon_name, startup_wm_class, startup_wm_class);
+      executable_path, icon_spec, startup_wm_class, startup_wm_class);
 
   g_file_set_contents(desktop_file_path, desktop_entry, -1, nullptr);
 }
 
 void ensure_desktop_entry() {
+#ifndef NDEBUG
+  // Dev builds (`flutter run`) register a user-local desktop entry so the app
+  // shows a proper dock icon, mirroring the plume-pdf runner. Release builds
+  // rely on the desktop entry shipped by the deb/rpm packages instead.
   g_autofree gchar* executable_path = get_executable_path();
   if (executable_path == nullptr) {
-    return;
-  }
-
-  // The installed .deb already ships a system desktop entry and icon.
-  if (g_str_has_prefix(executable_path, "/opt/cliper/")) {
     return;
   }
 
@@ -96,10 +99,18 @@ void ensure_desktop_entry() {
     return;
   }
 
-  write_desktop_entry(APPLICATION_ID, APPLICATION_ID, APPLICATION_ID,
+  g_autofree gchar* app_icon_path = g_build_filename(
+      g_get_user_data_dir(), "icons", "hicolor", "256x256", "apps",
+      "com.cliper.app.png", nullptr);
+  g_autofree gchar* cliper_icon_path = g_build_filename(
+      g_get_user_data_dir(), "icons", "hicolor", "256x256", "apps",
+      "cliper.png", nullptr);
+
+  write_desktop_entry(APPLICATION_ID, app_icon_path, APPLICATION_ID,
                       executable_path, applications_dir);
-  write_desktop_entry("cliper", "cliper", "cliper", executable_path,
+  write_desktop_entry("cliper", cliper_icon_path, "cliper", executable_path,
                       applications_dir);
+#endif
 }
 
 void apply_window_icon(GtkWindow* window) {

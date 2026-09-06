@@ -105,6 +105,28 @@ foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
     COMPONENT Runtime)
 endforeach(bundled_library)
 
+# super_native_extensions 在无 Rust 工具链的机器上使用预编译产物，
+# 该产物无 SONAME，插件链接时把 NEEDED 记录成相对子路径
+# plugins/super_native_extensions/libsuper_native_extensions.so，
+# 运行时靠插件库自身的 $ORIGIN RUNPATH 解析（见 issue #122）。
+# 因此除平铺安装外，还需按该相对路径补一份拷贝，保证 bundle 可加载。
+foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
+  get_filename_component(_bundled_name "${bundled_library}" NAME)
+  if(_bundled_name STREQUAL "libsuper_native_extensions.so")
+    install(FILES "${bundled_library}"
+      DESTINATION "${INSTALL_BUNDLE_LIB_DIR}/plugins/super_native_extensions"
+      COMPONENT Runtime)
+  endif()
+endforeach()
+
+# Install a 256px app icon to data/ so the native runner can set the window
+# icon from file and register a dev desktop entry with an absolute Icon path
+# (same approach as plume-pdf; bypasses icon-theme cache lookups).
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/icons/hicolor/256x256/apps/com.cliper.app.png"
+  DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"
+  RENAME "app_icon_256.png"
+  COMPONENT Runtime)
+
 # Copy the native assets provided by the build.dart from all packages.
 set(NATIVE_ASSETS_DIR "${PROJECT_BUILD_DIR}native_assets/linux/")
 install(DIRECTORY "${NATIVE_ASSETS_DIR}"
