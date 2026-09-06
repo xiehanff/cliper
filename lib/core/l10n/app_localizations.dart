@@ -42,6 +42,9 @@ class AppLocalizations {
   String get autoLaunchOn => _strings['autoLaunchOn']!;
   String get autoLaunchOff => _strings['autoLaunchOff']!;
   String get close => _strings['close']!;
+  String get minimize => _strings['minimize']!;
+  String get maximize => _strings['maximize']!;
+  String get restore => _strings['restore']!;
 
   static const Map<String, String> _zh = {
     'realtime': '实时剪贴板',
@@ -65,6 +68,9 @@ class AppLocalizations {
     'autoLaunchOn': '应用将在系统启动时自动运行',
     'autoLaunchOff': '应用不会随系统启动',
     'close': '关闭',
+    'minimize': '最小化',
+    'maximize': '最大化',
+    'restore': '还原',
   };
 
   static const Map<String, String> _en = {
@@ -89,5 +95,8 @@ class AppLocalizations {
     'autoLaunchOn': 'App will launch on system startup',
     'autoLaunchOff': 'App will not launch on system startup',
     'close': 'Close',
+    'minimize': 'Minimize',
+    'maximize': 'Maximize',
+    'restore': 'Restore',
   };
 }

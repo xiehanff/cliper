@@ -131,6 +131,7 @@ AppController createTestController() {
       hotkeyService: FakeHotkeyService(),
       launchService: FakeLaunchService(),
       logger: fakeLogger,
+      supportsGlobalShortcut: true,
     ),
     clipboardWriter: FakeClipboardWriter(),
     windowController: FakeWindowController(),

@@ -9,8 +9,13 @@ import '../widgets/sidebar/sidebar_widget.dart';
 
 class HomePage extends StatefulWidget {
   final VoidCallback? onHeaderDragStart;
+  final bool showWindowControls;
 
-  const HomePage({super.key, this.onHeaderDragStart});
+  const HomePage({
+    super.key,
+    this.onHeaderDragStart,
+    this.showWindowControls = false,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -46,6 +51,7 @@ class _HomePageState extends State<HomePage> {
                       onDragStart: widget.onHeaderDragStart,
                       settingsOpen: _settingsOpen,
                       onSettingsToggle: _toggleSettings,
+                      showWindowControls: widget.showWindowControls,
                     ),
                     Expanded(
                       child: Stack(

@@ -13,6 +13,7 @@ class SettingsHandler {
   final HotkeyService? _hotkeyService;
   final LaunchAtStartupService? _launchService;
   final AppLogger? _logger;
+  final bool _supportsGlobalShortcut;
 
   bool shortcutRecording = false;
 
@@ -20,12 +21,14 @@ class SettingsHandler {
     HotkeyService? hotkeyService,
     LaunchAtStartupService? launchService,
     AppLogger? logger,
+    bool? supportsGlobalShortcut,
   })  : _hotkeyService = hotkeyService,
         _launchService = launchService,
-        _logger = logger;
+        _logger = logger,
+        _supportsGlobalShortcut = supportsGlobalShortcut ?? !Platform.isLinux;
 
   bool get isMacOS => Platform.isMacOS;
-  bool get supportsGlobalShortcut => !Platform.isLinux;
+  bool get supportsGlobalShortcut => _supportsGlobalShortcut;
 
   ClipboardStore switchTheme(ClipboardStore store, String theme) {
     return store.copyWith(

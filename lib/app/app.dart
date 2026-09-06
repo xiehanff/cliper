@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
@@ -18,6 +19,8 @@ class CliperApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           theme: AppTheme.themeDataFor(controller.currentTheme),
           home: HomePage(
+            showWindowControls:
+                defaultTargetPlatform == TargetPlatform.linux,
             onHeaderDragStart: () async {
               try {
                 await windowManager.startDragging();
