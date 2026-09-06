@@ -22,6 +22,7 @@ class BaseViewportService implements ViewportController {
   final bool _preventClose;
   final bool _focusOnShow;
   final bool _hideWindowAfterItemActivation;
+  final bool _minimizeAfterItemActivation;
   final TitleBarStyle _titleBarStyle;
   final bool _windowButtonVisibility;
   bool _isVisible = false;
@@ -34,6 +35,9 @@ class BaseViewportService implements ViewportController {
   @override
   bool get hideWindowAfterItemActivation => _hideWindowAfterItemActivation;
 
+  @override
+  bool get minimizeAfterItemActivation => _minimizeAfterItemActivation;
+
   BaseViewportService({
     required AppLogger logger,
     required String platformLabel,
@@ -44,6 +48,7 @@ class BaseViewportService implements ViewportController {
     bool preventClose = true,
     bool focusOnShow = true,
     bool hideWindowAfterItemActivation = true,
+    bool minimizeAfterItemActivation = false,
     TitleBarStyle titleBarStyle = TitleBarStyle.hidden,
     bool windowButtonVisibility = false,
   })  : _logger = logger,
@@ -55,6 +60,7 @@ class BaseViewportService implements ViewportController {
         _preventClose = preventClose,
         _focusOnShow = focusOnShow,
         _hideWindowAfterItemActivation = hideWindowAfterItemActivation,
+        _minimizeAfterItemActivation = minimizeAfterItemActivation,
         _titleBarStyle = titleBarStyle,
         _windowButtonVisibility = windowButtonVisibility;
   @override
@@ -129,6 +135,18 @@ class BaseViewportService implements ViewportController {
       _logger.debug('Viewport hidden');
     } finally {
       _isTransitioning = false;
+    }
+  }
+
+  @override
+  Future<void> minimize() async {
+    await _ensureInitialized();
+    try {
+      await windowManager.minimize();
+      _logger.debug('Viewport minimized');
+    } catch (e, stack) {
+      _logger.error('Failed to minimize viewport',
+          error: e, stackTrace: stack);
     }
   }
 

@@ -61,13 +61,19 @@ class FakeWindowController implements ViewportController {
   int showCount = 0;
   int hideCount = 0;
   int toggleCount = 0;
+  int minimizeCount = 0;
   bool _visible = false;
+  bool hideAfterActivation = true;
+  bool minimizeAfterActivation = false;
 
   @override
   bool get isVisible => _visible;
 
   @override
-  bool get hideWindowAfterItemActivation => true;
+  bool get hideWindowAfterItemActivation => hideAfterActivation;
+
+  @override
+  bool get minimizeAfterItemActivation => minimizeAfterActivation;
 
   @override
   Future<void> initialize() async {}
@@ -88,6 +94,11 @@ class FakeWindowController implements ViewportController {
   Future<void> toggle() async {
     toggleCount++;
     _visible = !_visible;
+  }
+
+  @override
+  Future<void> minimize() async {
+    minimizeCount++;
   }
 }
 
@@ -114,7 +125,7 @@ class FakeLaunchService implements LaunchAtStartupService {
   }
 }
 
-AppController createTestController() {
+AppController createTestController({FakeWindowController? windowController}) {
   final idGenerator = FakeIdGenerator();
   final fakeLogger = FakeAppLogger();
   return AppController(
@@ -134,7 +145,7 @@ AppController createTestController() {
       supportsGlobalShortcut: true,
     ),
     clipboardWriter: FakeClipboardWriter(),
-    windowController: FakeWindowController(),
+    windowController: windowController ?? FakeWindowController(),
     logger: fakeLogger,
   );
 }

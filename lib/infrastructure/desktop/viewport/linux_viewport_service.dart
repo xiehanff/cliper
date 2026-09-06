@@ -13,6 +13,7 @@ class LinuxViewportService extends BaseViewportService {
           preventClose: false,
           focusOnShow: true,
           hideWindowAfterItemActivation: false,
+          minimizeAfterItemActivation: true,
           titleBarStyle: TitleBarStyle.hidden,
           windowButtonVisibility: false,
         );

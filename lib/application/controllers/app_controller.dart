@@ -241,11 +241,21 @@ class AppController extends ChangeNotifier {
     notifyListeners();
     _persist();
 
-    if (_windowController?.hideWindowAfterItemActivation ?? true) {
+    final windowController = _windowController;
+    if (windowController == null) return;
+
+    if (windowController.hideWindowAfterItemActivation) {
       try {
-        await _windowController?.hide();
+        await windowController.hide();
       } catch (e, stack) {
         _logger?.error('Failed to hide window', error: e, stackTrace: stack);
+      }
+    } else if (windowController.minimizeAfterItemActivation) {
+      try {
+        await windowController.minimize();
+      } catch (e, stack) {
+        _logger?.error('Failed to minimize window',
+            error: e, stackTrace: stack);
       }
     }
   }
