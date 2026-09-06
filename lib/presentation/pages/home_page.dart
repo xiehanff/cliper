@@ -32,6 +32,10 @@ class _HomePageState extends State<HomePage> {
     final controller = Provider.of<AppController>(context);
 
     return Scaffold(
+      // Transparent so the rounded DecoratedBox below is not backed by an
+      // opaque rectangular scaffold background (the Linux window itself is
+      // transparent; on Windows/macOS this is equally harmless).
+      backgroundColor: Colors.transparent,
       body: DecoratedBox(
         decoration: BoxDecoration(
           color: Theme.of(context).scaffoldBackgroundColor,
