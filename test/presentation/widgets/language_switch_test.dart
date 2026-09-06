@@ -17,7 +17,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(controller.currentLanguage, 'en');
-    expect(find.text('Realtime History'), findsWidgets);
+    expect(find.text('All'), findsWidgets);
 
     await tester.tap(find.byIcon(Icons.language_outlined));
     await tester.pumpAndSettle();

@@ -47,7 +47,7 @@ class AppLocalizations {
   String get restore => _strings['restore']!;
 
   static const Map<String, String> _zh = {
-    'realtime': '实时剪贴板',
+    'realtime': '全部',
     'collections': '收藏夹',
     'newGroup': '新建分组',
     'deleteGroupConfirm': '确定要删除这个分组吗？',
@@ -74,7 +74,7 @@ class AppLocalizations {
   };
 
   static const Map<String, String> _en = {
-    'realtime': 'Realtime History',
+    'realtime': 'All',
     'collections': 'Collections',
     'newGroup': 'New Group',
     'deleteGroupConfirm': 'Delete group?',

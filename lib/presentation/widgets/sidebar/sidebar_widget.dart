@@ -31,7 +31,7 @@ class _SidebarWidgetState extends State<SidebarWidget> {
       clipBehavior: Clip.hardEdge,
       child: Column(
         children: [
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
           SidebarTab.realtime(
             selected: controller.isRealtimeSelected,
             onTap: () => controller.selectGroup(null),
