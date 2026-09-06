@@ -1,0 +1,120 @@
+# CLIPER Linux 分支专用 CI（linux/wayland）。
+#
+# 与 master 的 build-desktop-packages.yml（Windows/macOS）互不干扰：
+# - 本 workflow 仅存在于 linux/wayland 分支，master 上没有此文件；
+# - 发版 tag 固定使用 linux-v* 前缀（如 linux-v1.1.6），不会命中
+#   master workflow 的 v* 触发规则（tag 指向哪个分支的提交，就用该
+#   提交内的 workflow 文件）。
+name: Build Linux Packages
+
+on:
+  push:
+    tags: ['linux-v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FLUTTER_VERSION: '3.44.2'
+
+jobs:
+  linux:
+    name: Linux (.deb + .rpm)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang \
+            cmake \
+            ninja-build \
+            pkg-config \
+            libgtk-3-dev \
+            liblzma-dev \
+            patchelf \
+            rpm \
+            libkeybinder-3.0-dev
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Enable Linux desktop
+        run: flutter config --enable-linux-desktop
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build Linux release
+        run: flutter build linux --release
+
+      - name: Package DEB
+        run: bash scripts/build_linux_deb.sh --skip-build
+
+      - name: Package RPM
+        run: bash scripts/build_linux_rpm.sh --skip-build
+
+      - name: Upload Linux packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: cliper-linux-${{ github.run_number }}
+          path: |
+            build/linux/x64/release/*.deb
+            build/linux/x64/release/*.rpm
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    name: Publish Linux GitHub Release
+    if: startsWith(github.ref, 'refs/tags/linux-v')
+    needs: [linux]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: cliper-linux-*
+          path: dist
+          merge-multiple: true
+
+      # 与 master 保持一致的 CHANGELOG 提取规则（`## [1.1.6] - 日期` 格式），
+      # linux-v1.1.6 会映射到 1.1.6 小节。
+      - name: Extract release notes from CHANGELOG
+        run: |
+          VERSION="${GITHUB_REF_NAME#linux-v}"
+          awk -v ver="$VERSION" '
+            index($0, "## [" ver "]") == 1 { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md | sed -e '/./,$!d' > RELEASE_NOTES.md
+          if [ ! -s RELEASE_NOTES.md ]; then
+            echo "Release ${GITHUB_REF_NAME}" > RELEASE_NOTES.md
+          fi
+
+      - name: Create release and upload packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "CLIPER Linux ${GITHUB_REF_NAME#linux-v}" \
+            --notes-file RELEASE_NOTES.md \
+            --verify-tag \
+            dist/* \
+          || gh release upload "${GITHUB_REF_NAME}" dist/* --clobber
